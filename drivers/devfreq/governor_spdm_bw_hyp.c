@@ -112,7 +112,7 @@ static irqreturn_t isr(int irq, void *dev_id)
 	return IRQ_WAKE_THREAD;
 }
 
-static int gov_spdm_hyp_target_bw(struct devfreq *devfreq, unsigned long *freq)
+static int gov_spdm_hyp_target_bw(struct devfreq *devfreq, unsigned long *freq, u32 *flag)
 {
 	struct devfreq_dev_status status;
 	int ret = -EINVAL;

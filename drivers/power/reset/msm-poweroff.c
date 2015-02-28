@@ -304,6 +304,13 @@ static void msm_restart_prepare(const char *cmd)
 				(cmd != NULL && cmd[0] != '\0'));
 	}
 
+	if (force_warm_reboot)
+		pr_info("Forcing a warm reset of the system\n");
+
+#ifdef CONFIG_MSM_PRESERVE_MEM
+	need_warm_reset = true;
+#endif
+
 	/* Hard reset the PMIC unless memory contents must be maintained. */
 	if (need_warm_reset)
 		qpnp_pon_system_pwr_off(PON_POWER_OFF_WARM_RESET);

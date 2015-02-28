@@ -124,7 +124,7 @@ config QCOM_DLOAD_MODE
 	  make the kernel reboot on a kernel panic - that must be
 	  enabled via another mechanism.
 
-config QCOM_PRESERVE_MEM
+config MSM_PRESERVE_MEM
 	bool "Always preserve memory on restart"
 	depends on POWER_RESET_QCOM
 	help

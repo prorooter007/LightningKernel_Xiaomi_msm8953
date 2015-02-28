@@ -281,7 +281,11 @@ static void halt_spmi_pmic_arbiter(void)
 
 static void msm_restart_prepare(const char *cmd)
 {
+#ifdef CONFIG_MSM_PRESERVE_MEM
+	bool need_warm_reset = true;
+#else
 	bool need_warm_reset = false;
+#endif
 #ifdef CONFIG_QCOM_DLOAD_MODE
 	/* Write download mode flags if we're panic'ing
 	 * Write download mode flags if restart_mode says so

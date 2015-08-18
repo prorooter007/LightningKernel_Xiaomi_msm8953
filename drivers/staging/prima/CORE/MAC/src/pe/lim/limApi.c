@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /*
  * Copyright (c) 2011-2018, 2020 The Linux Foundation. All rights reserved.
  *
@@ -1086,8 +1087,8 @@ tSirRetStatus peOpen(tpAniSirGlobal pMac, tMacOpenParameters *pMacOpenParam)
      */
 #ifdef LIM_TRACE_RECORD
     MTRACE(limTraceInit(pMac));
-#endif
     lim_register_debug_callback();
+#endif
     return eSIR_SUCCESS;
 }
 

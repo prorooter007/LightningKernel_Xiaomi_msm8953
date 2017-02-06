@@ -205,6 +205,10 @@ static void do_input_boost(struct work_struct *work)
 #ifdef CONFIG_DYNAMIC_STUNE_BOOST
 	cancel_delayed_work_sync(&dynamic_stune_boost_rem);
 #endif /* CONFIG_DYNAMIC_STUNE_BOOST */
+
+	if (!input_boost_ms)
+		return;
+
 	cancel_delayed_work_sync(&input_boost_rem);
 
 	if (stune_boost_active) {

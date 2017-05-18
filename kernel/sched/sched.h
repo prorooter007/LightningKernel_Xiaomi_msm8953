@@ -295,6 +295,7 @@ bool __dl_overflow(struct dl_bw *dl_b, int cpus, u64 old_bw, u64 new_bw)
 }
 
 extern struct mutex sched_domains_mutex;
+void dl_change_utilization(struct task_struct *p, u64 new_bw);
 
 #ifdef CONFIG_CGROUP_SCHED
 
@@ -1676,6 +1677,7 @@ extern void init_rt_schedtune_timer(struct sched_rt_entity *rt_se);
 extern struct dl_bandwidth def_dl_bandwidth;
 extern void init_dl_bandwidth(struct dl_bandwidth *dl_b, u64 period, u64 runtime);
 extern void init_dl_task_timer(struct sched_dl_entity *dl_se);
+extern void init_dl_inactive_task_timer(struct sched_dl_entity *dl_se);
 
 unsigned long to_ratio(u64 period, u64 runtime);
 

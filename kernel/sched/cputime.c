@@ -296,8 +296,7 @@ static inline cputime_t account_other_time(cputime_t max)
 {
 	cputime_t accounted;
 
-	/* Shall be converted to a lockdep-enabled lightweight check */
-	WARN_ON_ONCE(!irqs_disabled());
+	lockdep_assert_irqs_disabled();
 
 	accounted = steal_account_process_time(max);
 

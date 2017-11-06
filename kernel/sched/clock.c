@@ -331,7 +331,7 @@ void sched_clock_tick(void)
 	if (unlikely(!sched_clock_running))
 		return;
 
-	WARN_ON_ONCE(!irqs_disabled());
+	lockdep_assert_irqs_disabled();
 
 	scd = this_scd();
 	now_gtod = ktime_to_ns(ktime_get());

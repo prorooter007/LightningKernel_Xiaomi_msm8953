@@ -87,7 +87,7 @@ static void keccakf(u64 st[25])
 	}
 }
 
-static int sha3_init(struct shash_desc *desc)
+int crypto_sha3_init(struct shash_desc *desc)
 {
 	struct sha3_state *sctx = shash_desc_ctx(desc);
 	unsigned int digest_size = crypto_shash_digestsize(desc->tfm);
@@ -99,8 +99,9 @@ static int sha3_init(struct shash_desc *desc)
 	memset(sctx->st, 0, sizeof(sctx->st));
 	return 0;
 }
+EXPORT_SYMBOL(crypto_sha3_init);
 
-static int sha3_update(struct shash_desc *desc, const u8 *data,
+int crypto_sha3_update(struct shash_desc *desc, const u8 *data,
 		       unsigned int len)
 {
 	struct sha3_state *sctx = shash_desc_ctx(desc);
@@ -136,8 +137,9 @@ static int sha3_update(struct shash_desc *desc, const u8 *data,
 
 	return 0;
 }
+EXPORT_SYMBOL(crypto_sha3_update);
 
-static int sha3_final(struct shash_desc *desc, u8 *out)
+int crypto_sha3_final(struct shash_desc *desc, u8 *out)
 {
 	struct sha3_state *sctx = shash_desc_ctx(desc);
 	unsigned int i, inlen = sctx->partial;
@@ -162,12 +164,13 @@ static int sha3_final(struct shash_desc *desc, u8 *out)
 	memset(sctx, 0, sizeof(*sctx));
 	return 0;
 }
+EXPORT_SYMBOL(crypto_sha3_final);
 
 static struct shash_alg algs[] = { {
 	.digestsize		= SHA3_224_DIGEST_SIZE,
-	.init			= sha3_init,
-	.update			= sha3_update,
-	.final			= sha3_final,
+	.init			= crypto_sha3_init,
+	.update			= crypto_sha3_update,
+	.final			= crypto_sha3_final,
 	.descsize		= sizeof(struct sha3_state),
 	.base.cra_name		= "sha3-224",
 	.base.cra_driver_name	= "sha3-224-generic",
@@ -176,9 +179,9 @@ static struct shash_alg algs[] = { {
 	.base.cra_module	= THIS_MODULE,
 }, {
 	.digestsize		= SHA3_256_DIGEST_SIZE,
-	.init			= sha3_init,
-	.update			= sha3_update,
-	.final			= sha3_final,
+	.init			= crypto_sha3_init,
+	.update			= crypto_sha3_update,
+	.final			= crypto_sha3_final,
 	.descsize		= sizeof(struct sha3_state),
 	.base.cra_name		= "sha3-256",
 	.base.cra_driver_name	= "sha3-256-generic",
@@ -187,9 +190,9 @@ static struct shash_alg algs[] = { {
 	.base.cra_module	= THIS_MODULE,
 }, {
 	.digestsize		= SHA3_384_DIGEST_SIZE,
-	.init			= sha3_init,
-	.update			= sha3_update,
-	.final			= sha3_final,
+	.init			= crypto_sha3_init,
+	.update			= crypto_sha3_update,
+	.final			= crypto_sha3_final,
 	.descsize		= sizeof(struct sha3_state),
 	.base.cra_name		= "sha3-384",
 	.base.cra_driver_name	= "sha3-384-generic",
@@ -198,9 +201,9 @@ static struct shash_alg algs[] = { {
 	.base.cra_module	= THIS_MODULE,
 }, {
 	.digestsize		= SHA3_512_DIGEST_SIZE,
-	.init			= sha3_init,
-	.update			= sha3_update,
-	.final			= sha3_final,
+	.init			= crypto_sha3_init,
+	.update			= crypto_sha3_update,
+	.final			= crypto_sha3_final,
 	.descsize		= sizeof(struct sha3_state),
 	.base.cra_name		= "sha3-512",
 	.base.cra_driver_name	= "sha3-512-generic",

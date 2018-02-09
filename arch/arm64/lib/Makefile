@@ -24,4 +24,6 @@ CFLAGS_atomic_ll_sc.o	:= -ffixed-x1 -ffixed-x2        		\
 		   -fcall-saved-x13 -fcall-saved-x14 -fcall-saved-x15	\
 		   -fomit-frame-pointer
 
+CFLAGS_REMOVE_atomic_ll_sc.o := -pg
+
 obj-$(CONFIG_CRC32) += crc32.o

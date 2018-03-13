@@ -588,12 +588,7 @@ static bool eval_need(struct cluster_data *cluster)
 	if (new_need > cluster->active_cpus) {
 		ret = 1;
 	} else {
-		/*
-		 * When there is no change in need and there are no more
-		 * active CPUs than currently needed, just update the
-		 * need time stamp and return.
-		 */
-		if (new_need == last_need && new_need == cluster->active_cpus) {
+		if (new_need == last_need) {
 			cluster->need_ts = now;
 			spin_unlock_irqrestore(&state_lock, flags);
 			return 0;

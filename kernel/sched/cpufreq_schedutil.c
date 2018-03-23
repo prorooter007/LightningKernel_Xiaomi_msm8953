@@ -148,6 +148,7 @@ static void sugov_update_commit(struct sugov_policy *sg_policy, u64 time,
 				unsigned int next_freq)
 {
 	struct cpufreq_policy *policy = sg_policy->policy;
+	unsigned int cpu;
 
 	if (sg_policy->next_freq == next_freq)
 		return;
@@ -164,7 +165,9 @@ static void sugov_update_commit(struct sugov_policy *sg_policy, u64 time,
 			return;
 
 		policy->cur = next_freq;
-		trace_cpu_frequency(next_freq, smp_processor_id());
+		for_each_cpu(cpu, policy->cpus) {
+			trace_cpu_frequency(next_freq, cpu);
+		}
 	} else {
 		sg_policy->work_in_progress = true;
 		sched_irq_work_queue(&sg_policy->irq_work);

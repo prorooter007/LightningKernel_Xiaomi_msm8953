@@ -502,7 +502,11 @@ sdm429-qrd-overlay.dtbo-base := sdm429.dtb \
 	msm8937-interposer-sdm429.dtb
 else
 ifeq ($(CONFIG_MACH_XIAOMI_MSM8953),y)
-dtb-$(CONFIG_MACH_XIAOMI_TISSOT) += msm8953-qrd-sku3-tissot.dtb
+ifneq ($(CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE),y)
+# Build non-treble DTB as well
+dtb-$(CONFIG_MACH_XIAOMI_TISSOT) += msm8953-qrd-sku3-tissot-nontreble.dtb
+endif
+dtb-$(CONFIG_MACH_XIAOMI_TISSOT) += msm8953-qrd-sku3-tissot-treble.dtb
 else
 dtb-$(CONFIG_ARCH_MSM8953) += msm8953-cdp.dtb \
 	msm8953-mtp.dtb \

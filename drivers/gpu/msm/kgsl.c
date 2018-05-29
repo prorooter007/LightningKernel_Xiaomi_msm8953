@@ -33,6 +33,7 @@
 #include <linux/mm.h>
 #include <linux/kthread.h>
 #include <asm/cacheflush.h>
+#include <linux/ion.h>
 
 #include "kgsl.h"
 #include "kgsl_debugfs.h"
@@ -427,9 +428,9 @@ static int kgsl_mem_entry_attach_process(struct kgsl_device *device,
 	if (entry->memdesc.gpuaddr) {
 		if (entry->memdesc.flags & KGSL_MEMFLAGS_SPARSE_VIRT)
 			ret = kgsl_mmu_sparse_dummy_map(
-					entry->memdesc.pagetable,
-					&entry->memdesc, 0,
-					entry->memdesc.size);
+				entry->memdesc.pagetable,
+				&entry->memdesc, 0,
+				kgsl_memdesc_footprint(&entry->memdesc));
 		else if (entry->memdesc.gpuaddr)
 			ret = kgsl_mmu_map(entry->memdesc.pagetable,
 					&entry->memdesc);
@@ -2378,6 +2379,7 @@ static long _gpuobj_map_dma_buf(struct kgsl_device *device,
 {
 	struct kgsl_gpuobj_import_dma_buf buf;
 	struct dma_buf *dmabuf;
+	unsigned long flags = 0;
 	int ret;
 
 	/*
@@ -2407,6 +2409,16 @@ static long _gpuobj_map_dma_buf(struct kgsl_device *device,
 
 	if (IS_ERR_OR_NULL(dmabuf))
 		return (dmabuf == NULL) ? -EINVAL : PTR_ERR(dmabuf);
+
+	/*
+	 * ION cache ops are routed through kgsl, so record if the dmabuf is
+	 * cached or not in the memdesc. Assume uncached if dma_buf_get_flags
+	 * fails.
+	 */
+	dma_buf_get_flags(dmabuf, &flags);
+	if (flags & ION_FLAG_CACHED)
+		entry->memdesc.flags |=
+			KGSL_CACHEMODE_WRITEBACK << KGSL_CACHEMODE_SHIFT;
 
 	ret = kgsl_setup_dma_buf(device, pagetable, entry, dmabuf);
 	if (ret)

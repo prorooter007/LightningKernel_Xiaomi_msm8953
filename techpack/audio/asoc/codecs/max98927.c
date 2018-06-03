@@ -19,6 +19,8 @@
 #include "max98927.h"
 #include <linux/regulator/consumer.h>
 
+#define CONFIG_SOUND_CONTROL
+
 #define F0_DETECT 1
 
 #define Q_DSM_ADAPTIVE_FC 9
@@ -801,6 +803,23 @@ static int max98927_spk_gain_put(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
+#ifdef CONFIG_SOUND_CONTROL
+struct snd_soc_codec *max98927_codec;
+int sound_control_speaker_gain(int gain)
+{
+	struct max98927_priv *max98927 = snd_soc_codec_get_drvdata(max98927_codec);
+
+	if (gain < ((1 << MAX98927_Speaker_Gain_Width) - 1)) {
+		max98927_wrap_update_bits(max98927, MAX98927_Speaker_Gain,
+				MAX98927_Speaker_Gain_SPK_PCM_GAIN_Mask,
+				gain);
+		max98927->spk_gain = gain;
+	}
+
+	return max98927->spk_gain;
+}
+#endif
+
 static int max98927_digital_gain_get(struct snd_kcontrol *kcontrol,
 		struct snd_ctl_elem_value *ucontrol)
 {
@@ -1264,6 +1283,9 @@ static int max98927_probe(struct snd_soc_codec *codec)
 	pr_info("%s: enter\n", __func__);
 
 	max98927->codec = codec;
+#ifdef CONFIG_SOUND_CONTROL
+	max98927_codec = codec;
+#endif
 	snd_soc_dapm_ignore_suspend(dapm, "BE_OUT");
 	snd_soc_dapm_ignore_suspend(dapm, "BE_IN");
 	snd_soc_dapm_ignore_suspend(dapm, "HiFi Playback");

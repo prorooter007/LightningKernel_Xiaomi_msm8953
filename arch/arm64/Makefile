@@ -35,7 +35,7 @@ LDFLAGS_vmlinux	+= --fix-cortex-a53-843419
 else
   ifeq ($(ld-name),gold)
 # Pass --no-fix-cortex-a53-843419 to ensure the erratum fix is disabled
-LDFLAGS	+= --no-fix-cortex-a53-843419
+KBUILD_LDFLAGS	+= --no-fix-cortex-a53-843419
   endif
 endif
 

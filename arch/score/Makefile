@@ -22,8 +22,8 @@ KBUILD_AFLAGS += $(cflags-y)
 KBUILD_CFLAGS += $(cflags-y)
 KBUILD_AFLAGS_MODULE +=
 KBUILD_CFLAGS_MODULE +=
-LDFLAGS += --oformat elf32-littlescore
-LDFLAGS_vmlinux	+= -G0 -static -nostdlib
+KBUILD_LDFLAGS       += --oformat elf32-littlescore
+LDFLAGS_vmlinux      += -G0 -static -nostdlib
 
 head-y := arch/score/kernel/head.o
 libs-y += arch/score/lib/

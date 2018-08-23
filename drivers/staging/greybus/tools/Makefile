@@ -25,7 +25,7 @@ all: $(TOOLS)
 
 loopback_%: loopback_%.o
 	@echo '  TARGET_LD $@'
-	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
+	$(Q)$(CC) $(CFLAGS) $(KBUILD_LDFLAGS) $^ -o $@
 
 clean::
 	rm -f *.o $(TOOLS)

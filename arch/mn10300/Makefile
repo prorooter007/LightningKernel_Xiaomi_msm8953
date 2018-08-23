@@ -18,7 +18,7 @@ CCSPECS	:= $(shell $(CC) -v 2>&1 | grep "^Reading specs from " | head -1 | cut -
 CCDIR	:= $(strip $(patsubst %/specs,%,$(CCSPECS)))
 KBUILD_CPPFLAGS += -nostdinc -I$(CCDIR)/include
 
-LDFLAGS		:=
+KBUILD_LDFLAGS	:=
 OBJCOPYFLAGS	:= -O binary -R .note -R .comment -R .GCC-command-line -R .note.gnu.build-id -S
 #LDFLAGS_vmlinux := -Map linkmap.txt
 CHECKFLAGS	+=

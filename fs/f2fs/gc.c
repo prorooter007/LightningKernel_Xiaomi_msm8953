@@ -27,17 +27,20 @@ static bool screen_on = true;
 // Use 1 instead of 0 to allow thread interrupts
 static unsigned int soff_wait_ms = 1;
 
-static inline void gc_set_wakelock(struct f2fs_gc_kthread *gc_th, bool val)
+static inline void gc_set_wakelock(struct f2fs_sb_info *sbi,
+		struct f2fs_gc_kthread *gc_th, bool val)
 {
 	if (val) {
-		if (!gc_th->gc_wakelock.active) {
-			f2fs_msg(sbi->sb, KERN_INFO, "Catching wakelock for GC");
-			__pm_stay_awake(&gc_th->gc_wakelock);
+		if (!wake_lock_active(&gc_th->gc_wakelock)) {
+			f2fs_msg(sbi->sb, KERN_INFO,
+					"Catching wakelock for GC\n");
+			wake_lock(&gc_th->gc_wakelock);
 		}
 	} else {
-		if (gc_th->gc_wakelock.active) {
-			f2fs_msg(sbi->sb, KERN_INFO, "Unlocking wakelock for GC");
-			__pm_relax(&gc_th->gc_wakelock);
+		if (wake_lock_active(&gc_th->gc_wakelock)) {
+			f2fs_msg(sbi->sb, KERN_INFO,
+					"Unlocking wakelock for GC\n");
+			wake_unlock(&gc_th->gc_wakelock);
 		}
 	}
 }
@@ -59,11 +62,11 @@ static int gc_thread_func(void *data)
 
 		force_gc = TRIGGER_SOFF;
 		if (force_gc) {
-			gc_set_wakelock(gc_th, true);
+			gc_set_wakelock(sbi, gc_th, true);
 			wait_ms = soff_wait_ms;
 			sbi->gc_mode = GC_URGENT;
 		} else {
-			gc_set_wakelock(gc_th, false);
+			gc_set_wakelock(sbi, gc_th, false);
 			wait_ms = gc_th->min_sleep_time;
 			sbi->gc_mode = GC_NORMAL;
 		}
@@ -137,8 +140,9 @@ do_gc:
 		/* if return value is not zero, no victim was selected */
 		if (f2fs_gc(sbi, test_opt(sbi, FORCE_FG_GC), true, NULL_SEGNO)) {
 			wait_ms = gc_th->no_gc_sleep_time;
-			gc_set_wakelock(gc_th, false);
-			pr_info("f2fs: no more GC victim found, sleeping for %u ms\n", wait_ms);
+			gc_set_wakelock(sbi, gc_th, false);
+			f2fs_msg(sbi->sb, KERN_INFO,
+				"No more GC victim found, sleeping for %u ms\n", wait_ms);
 		}
 
 		trace_f2fs_background_gc(sbi->sb, wait_ms,
@@ -228,8 +232,13 @@ void f2fs_start_all_gc_threads(void)
 			wake_up_interruptible_all(&sbi->gc_thread->gc_wait_queue_head);
 			wake_up_discard_thread(sbi, true);
 		} else {
-			pr_info("f2fs: invalid blocks lower than %d%%, skipping rapid GC (%u / (%u - %u))\n",
-				RAPID_GC_LIMIT_INVALID_BLOCK, invalid_blocks, sbi->user_block_count, written_block_count(sbi));
+			f2fs_msg(sbi->sb, KERN_INFO,
+					"Invalid blocks lower than %d%%,"
+					"skipping rapid GC (%u / (%u - %u))\n",
+					RAPID_GC_LIMIT_INVALID_BLOCK,
+					invalid_blocks,
+					sbi->user_block_count,
+					written_block_count(sbi));
 		}
 	}
 	mutex_unlock(&f2fs_sbi_mutex);

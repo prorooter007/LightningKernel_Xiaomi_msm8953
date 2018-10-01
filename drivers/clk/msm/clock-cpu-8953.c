@@ -40,6 +40,11 @@
 
 #include "clock.h"
 
+#ifdef CONFIG_CPU_VOLTAGE_TABLE
+#include <linux/cpufreq.h>
+#include <linux/regulator/driver.h>
+#endif
+
 #define APCS_PLL_MODE		0x0
 #define APCS_PLL_L_VAL		0x8
 #define APCS_PLL_ALPHA_VAL	0x10
@@ -490,6 +495,63 @@ fail:
 	return NULL;
 }
 
+#ifdef CONFIG_CPU_VOLTAGE_TABLE
+ #define CPU_VDD_MIN	 600
+#define CPU_VDD_MAX	1450
+ extern bool is_used_by_scaling(unsigned int freq);
+ ssize_t show_UV_mV_table(struct cpufreq_policy *policy, char *buf)
+{
+	int i, freq, len = 0;
+	/* use only master core 0 */
+	int num_levels = cpu_clk[0]->vdd_class->num_levels;
+	/* sanity checks */
+	if (num_levels < 0)
+		return -EINVAL;
+	if (!buf)
+		return -EINVAL;
+	/* format UV_mv table */
+	for (i = 0; i < num_levels; i++) {
+		/* show only those used in scaling */
+		if (!is_used_by_scaling(freq = cpu_clk[0]->fmax[i] / 1000))
+			continue;
+		len += sprintf(buf + len, "%dmhz: %u mV\n", freq / 1000,
+			       cpu_clk[0]->vdd_class->vdd_uv[i] / 1000);
+	}
+	return len;
+}
+ ssize_t store_UV_mV_table(struct cpufreq_policy *policy, char *buf,
+				size_t count)
+{
+	int i, j;
+	int ret = 0;
+	unsigned int val;
+	char size_cur[8];
+	/* use only master core 0 */
+	int num_levels = cpu_clk[0]->vdd_class->num_levels;
+	/* sanity checks */
+	if (num_levels < 0)
+		return -1;
+	for (i = 0; i < num_levels; i++) {
+		if (!is_used_by_scaling(cpu_clk[0]->fmax[i] / 1000))
+			continue;
+		ret = sscanf(buf, "%u", &val);
+		if (!ret)
+			return -EINVAL;
+		/* bounds check */
+		val = min( max((unsigned int)val, (unsigned int)CPU_VDD_MIN),
+			(unsigned int)CPU_VDD_MAX);
+		/* apply it to all available cores */
+		for (j = 0; j < NR_CPUS; j++)
+			cpu_clk[j]->vdd_class->vdd_uv[i] = val * 1000;
+		/* Non-standard sysfs interface: advance buf */
+		ret = sscanf(buf, "%s", size_cur);
+		buf += strlen(size_cur) + 1;
+	}
+	pr_warn("faux123: user voltage table modified!\n");
+	return count;
+}
+#endif
+
 static int add_opp(struct clk *c, struct device *dev, unsigned long max_rate)
 {
 	unsigned long rate = 0;
@@ -603,6 +665,162 @@ static void populate_opp_table(struct platform_device *pdev)
 
 	print_opp_table(a53_pwr_cpu, a53_perf_cpu);
 }
+
+#ifdef CONFIG_VOLTAGE_CONTROL
+extern int cpr_regulator_get_ceiling_voltage(struct regulator *regulator,int cori);
+extern int cpr_regulator_get_floor_voltage(struct regulator *regulator,int cori);
+extern int cpr_regulator_get_last_voltage(struct regulator *regulator,int cori);
+extern int cpr_regulator_set_ceiling_voltage(struct regulator *regulator,int cori, int volt);
+extern int cpr_regulator_set_floor_voltage(struct regulator *regulator,int cori, int volt);
+extern int cpr_regulator_set_last_voltage(struct regulator *regulator,int cori, int volt);
+
+ssize_t get_Voltages(char *buf)
+{
+	ssize_t count = 0;
+	int i, uv;
+	if (!buf)
+		return 0;
+	//Ceiling
+	for (i = 1; i < a53_pwr_clk.c.num_fmax; i++) {
+		uv = cpr_regulator_get_ceiling_voltage(
+					a53_pwr_clk.c.vdd_class->regulator[0],
+					a53_pwr_clk.c.vdd_class->vdd_uv[i]);
+		if (uv < 0) return 0;
+		count += sprintf(buf + count, "pwrcl_Vmax:%lumhz: %d mV\n",
+					a53_pwr_clk.c.fmax[i] / 1000000,
+					uv / 1000);
+	//Floor
+		uv = cpr_regulator_get_floor_voltage(
+					a53_pwr_clk.c.vdd_class->regulator[0],
+					a53_pwr_clk.c.vdd_class->vdd_uv[i]);
+		if (uv < 0) return 0;
+		count += sprintf(buf + count, "pwrcl_Vmin:%lumhz: %d mV\n",
+					a53_pwr_clk.c.fmax[i] / 1000000,
+					uv / 1000);
+	//current
+		uv = cpr_regulator_get_last_voltage(
+					a53_pwr_clk.c.vdd_class->regulator[0],
+					a53_pwr_clk.c.vdd_class->vdd_uv[i]);
+		if (uv < 0) return 0;
+		count += sprintf(buf + count, "pwrcl_Vcur:%lumhz: %d mV\n",
+					a53_pwr_clk.c.fmax[i] / 1000000,
+					uv / 1000);
+	}
+	//Big ceiling
+	for (i = 1; i < a53_perf_clk.c.num_fmax; i++) {
+		uv = cpr_regulator_get_ceiling_voltage(
+					a53_perf_clk.c.vdd_class->regulator[0],
+					a53_perf_clk.c.vdd_class->vdd_uv[i]);
+		if (uv < 0)
+			return 0;
+		count += sprintf(buf + count, "perfcl_Vmax:%lumhz: %d mV\n",
+					a53_perf_clk.c.fmax[i] / 1000000,
+					uv / 1000);
+	//floor
+		uv = cpr_regulator_get_floor_voltage(
+					a53_perf_clk.c.vdd_class->regulator[0],
+					a53_perf_clk.c.vdd_class->vdd_uv[i]);
+		if (uv < 0)
+			return 0;
+		count += sprintf(buf + count, "perfcl_Vmin:%lumhz: %d mV\n",
+					a53_perf_clk.c.fmax[i] / 1000000,
+					uv / 1000);
+	//current
+		uv = cpr_regulator_get_last_voltage(
+					a53_perf_clk.c.vdd_class->regulator[0],
+					a53_perf_clk.c.vdd_class->vdd_uv[i]);
+		if (uv < 0)
+			return 0;
+		count += sprintf(buf + count, "perfcl_Vcur:%lumhz: %d mV\n",
+					a53_perf_clk.c.fmax[i] / 1000000,
+					uv / 1000);
+	}
+	return count;
+}
+ssize_t set_Voltages(const char *buf, size_t count)
+{
+	int i, mv, ret;
+	char line[32];
+	if (!buf)
+		return -EINVAL;
+	for (i = 1; i < a53_pwr_clk.c.num_fmax; i++)
+	{
+		ret = sscanf(buf, "%d", &mv);
+		if (ret != 1)
+			return -EINVAL;
+		ret = cpr_regulator_set_ceiling_voltage(
+					a53_pwr_clk.c.vdd_class->regulator[0],
+					a53_pwr_clk.c.vdd_class->vdd_uv[i],
+					mv * 1000);
+        if (ret < 0)
+			return ret;
+         ret = sscanf(buf, "%s", line);
+		buf += strlen(line) + 1;
+	//floor
+		ret = sscanf(buf, "%d", &mv);
+		if (ret != 1)
+			return -EINVAL;
+		ret = cpr_regulator_set_floor_voltage(
+					a53_pwr_clk.c.vdd_class->regulator[0],
+					a53_pwr_clk.c.vdd_class->vdd_uv[i],
+					mv * 1000);
+        if (ret < 0)
+			return ret;
+         ret = sscanf(buf, "%s", line);
+		buf += strlen(line) + 1;
+	//current
+		ret = sscanf(buf, "%d", &mv);
+		if (ret != 1)
+			return -EINVAL;
+		ret = cpr_regulator_set_last_voltage(
+					a53_pwr_clk.c.vdd_class->regulator[0],
+					a53_pwr_clk.c.vdd_class->vdd_uv[i],
+					mv * 1000);
+        if (ret < 0)
+			return ret;
+         ret = sscanf(buf, "%s", line);
+		buf += strlen(line) + 1;
+	}
+	for (i = 1; i < a53_perf_clk.c.num_fmax; i++)
+	{
+		ret = sscanf(buf, "%d", &mv);
+		if (ret != 1)
+			return -EINVAL;
+		ret = cpr_regulator_set_ceiling_voltage(
+					a53_perf_clk.c.vdd_class->regulator[0],
+					a53_perf_clk.c.vdd_class->vdd_uv[i],
+					mv * 1000);
+        if (ret < 0)
+			return ret;
+         ret = sscanf(buf, "%s", line);
+		buf += strlen(line) + 1;
+
+		ret = sscanf(buf, "%d", &mv);
+		if (ret != 1)
+			return -EINVAL;
+		ret = cpr_regulator_set_floor_voltage(
+					a53_perf_clk.c.vdd_class->regulator[0],
+					a53_perf_clk.c.vdd_class->vdd_uv[i],
+					mv * 1000);
+        if (ret < 0)
+			return ret;
+         ret = sscanf(buf, "%s", line);
+		buf += strlen(line) + 1;
+		ret = sscanf(buf, "%d", &mv);
+		if (ret != 1)
+			return -EINVAL;
+		ret = cpr_regulator_set_last_voltage(
+					a53_perf_clk.c.vdd_class->regulator[0],
+					a53_perf_clk.c.vdd_class->vdd_uv[i],
+					mv * 1000);
+        if (ret < 0)
+			return ret;
+         ret = sscanf(buf, "%s", line);
+		buf += strlen(line) + 1;
+	}
+	return count;
+}
+#endif
 
 static int of_get_fmax_vdd_class(struct platform_device *pdev, struct clk *c,
 								char *prop_name)

@@ -113,6 +113,7 @@ struct arm_pmu {
 	int		(*request_irq)(struct arm_pmu *, irq_handler_t handler);
 	void		(*free_irq)(struct arm_pmu *);
 	int		(*map_event)(struct perf_event *event);
+	int		(*filter_match)(struct perf_event *event);
 	int		num_events;
 	int		pmu_state;
 	int		percpu_irq;

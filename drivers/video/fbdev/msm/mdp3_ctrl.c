@@ -965,6 +965,8 @@ static int mdp3_ctrl_on(struct msm_fb_data_type *mfd)
 				MDSS_EVENT_UNBLANK, NULL);
 			rc |= panel->event_handler(panel,
 				MDSS_EVENT_PANEL_ON, NULL);
+		if (mdss_fb_is_power_on_lp(mfd))
+			rc |= mdp3_enable_panic_ctrl();
 			mdp3_clk_enable(0, 0);
 		}
 	}

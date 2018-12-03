@@ -213,5 +213,4 @@ source "drivers/sensors/Kconfig"
 source "drivers/tee/Kconfig"
 
 source "drivers/opp/Kconfig"
-
 endmenu

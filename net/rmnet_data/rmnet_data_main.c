@@ -24,9 +24,9 @@
 #define CREATE_TRACE_POINTS
 #include "rmnet_data_trace.h"
 
-/* Module Parameters */
-unsigned int rmnet_data_log_level = RMNET_LOG_LVL_ERR;
-module_param(rmnet_data_log_level, uint, 0644);
+/* ***************** Module Parameters ************************************** */
+unsigned int rmnet_data_log_level;
+module_param(rmnet_data_log_level, uint,  S_IRUGO | S_IWUSR);
 MODULE_PARM_DESC(log_level, "Logging level");
 
 unsigned int rmnet_data_log_module_mask;

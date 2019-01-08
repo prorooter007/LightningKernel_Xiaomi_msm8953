@@ -44,8 +44,8 @@
 #define ARRAY_INDEX_FROM_ADDR(base, addr) ((addr) - (base))
 
 #define ENABLE_EVENT_LOG 1
-static unsigned int enable_event_log = ENABLE_EVENT_LOG;
-module_param(enable_event_log, uint, 0644);
+static unsigned int enable_event_log;
+module_param(enable_event_log, uint, S_IRUGO | S_IWUSR);
 MODULE_PARM_DESC(enable_event_log, "enable event logging in debug buffer");
 
 #define LOGLEVEL_NONE 8

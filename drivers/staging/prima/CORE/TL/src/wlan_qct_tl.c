@@ -11874,8 +11874,8 @@ WLAN_TLAPGetNextTxIds
 
   ++ucNextSTA;
 
-  if ( WLAN_MAX_STA_COUNT <= ucNextSTA )
-    ucNextSTA = 0;
+  if ( WLAN_MAX_STA_COUNT <= ucNextSTA ){
+    ucNextSTA = 0;}
 
     isServed = FALSE;
     if ( 0 == pTLCb->ucCurLeftWeight )
@@ -11886,13 +11886,13 @@ WLAN_TLAPGetNextTxIds
         //end of current VO, VI, BE, BK loop. Reset priority.
         pTLCb->uCurServedAC = WLANTL_AC_HIGH_PRIO;
       }
-      else 
+      else
       {
         pTLCb->uCurServedAC --;
       }
 
       pTLCb->ucCurLeftWeight =  pTLCb->tlConfigInfo.ucAcWeights[pTLCb->uCurServedAC];
- 
+
     } // (0 == pTLCb->ucCurLeftWeight)
 
   ucTempSTA = ucNextSTA;

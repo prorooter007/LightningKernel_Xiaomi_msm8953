@@ -164,7 +164,7 @@ __limFreshScanReqd(tpAniSirGlobal pMac, tANI_U8 returnFreshResults)
             if(!( ( (  (pMac->lim.gpSession[i].bssType == eSIR_INFRASTRUCTURE_MODE) ||
                         (pMac->lim.gpSession[i].limSystemRole == eLIM_BT_AMP_STA_ROLE))&&
                        (pMac->lim.gpSession[i].limSmeState == eLIM_SME_LINK_EST_STATE) )||
-                  
+
                   (    ( (pMac->lim.gpSession[i].bssType == eSIR_IBSS_MODE)||
                            (pMac->lim.gpSession[i].limSystemRole == eLIM_BT_AMP_AP_ROLE)||
                            (pMac->lim.gpSession[i].limSystemRole == eLIM_BT_AMP_STA_ROLE) )&&
@@ -183,13 +183,13 @@ __limFreshScanReqd(tpAniSirGlobal pMac, tANI_U8 returnFreshResults)
                       pMac->lim.gpSession[i].limSmeState);
                 break;
               }
-            
+
         }
     }
     limLog(pMac, LOG1, FL("FreshScanReqd: %d "), validState);
 
-   if( (validState) && (returnFreshResults & SIR_BG_SCAN_RETURN_FRESH_RESULTS))
-    return TRUE;
+   if( (validState) && (returnFreshResults & SIR_BG_SCAN_RETURN_FRESH_RESULTS)){
+    return TRUE;}
 
    return FALSE;
 }

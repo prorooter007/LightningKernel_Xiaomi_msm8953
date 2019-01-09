@@ -15216,14 +15216,14 @@ wlan_hdd_is_GO_power_collapse_allowed (hdd_context_t* pHddCtx)
                  FL("GO started"));
           return TRUE;
      }
-     else
+     else{
           /* wait till GO changes its interface to p2p device */
           hddLog(VOS_TRACE_LEVEL_INFO,
-                 FL("Del_bss called, avoid apps suspend"));
+                 FL("Del_bss called, avoid apps suspend"));}
           return FALSE;
 
 }
-/* Decide whether to allow/not the apps power collapse. 
+/* Decide whether to allow/not the apps power collapse.
  * Allow apps power collapse if we are in connected state.
  * if not, allow only if we are in IMPS  */
 v_BOOL_t hdd_is_apps_power_collapse_allowed(hdd_context_t* pHddCtx)
@@ -15232,8 +15232,8 @@ v_BOOL_t hdd_is_apps_power_collapse_allowed(hdd_context_t* pHddCtx)
     tANI_BOOLEAN scanRspPending = csrNeighborRoamScanRspPending(pHddCtx->hHal);
     tANI_BOOLEAN inMiddleOfRoaming = csrNeighborMiddleOfRoaming(pHddCtx->hHal);
     hdd_config_t *pConfig = pHddCtx->cfg_ini;
-    hdd_adapter_list_node_t *pAdapterNode = NULL, *pNext = NULL; 
-    hdd_adapter_t *pAdapter = NULL; 
+    hdd_adapter_list_node_t *pAdapterNode = NULL, *pNext = NULL;
+    hdd_adapter_t *pAdapter = NULL;
     VOS_STATUS status;
     tVOS_CONCURRENCY_MODE concurrent_state = 0;
 

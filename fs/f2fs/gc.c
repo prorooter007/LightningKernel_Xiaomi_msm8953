@@ -15,6 +15,7 @@
 #include <linux/freezer.h>
 #include <linux/fb.h>
 #include <linux/power_supply.h>
+#include <linux/wakelock.h>
 
 #include "f2fs.h"
 #include "node.h"
@@ -25,21 +26,19 @@
 #define TRIGGER_SOFF (!screen_on && power_supply_is_system_supplied())
 static bool screen_on = true;
 // Use 1 instead of 0 to allow thread interrupts
-static unsigned int soff_wait_ms = 1;
+#define SOFF_WAIT_MS 1
 
 static inline void gc_set_wakelock(struct f2fs_sb_info *sbi,
 		struct f2fs_gc_kthread *gc_th, bool val)
 {
 	if (val) {
 		if (!wake_lock_active(&gc_th->gc_wakelock)) {
-			f2fs_msg(sbi->sb, KERN_INFO,
-					"Catching wakelock for GC\n");
+			f2fs_msg(sbi->sb, KERN_INFO, "Catching wakelock for GC");
 			wake_lock(&gc_th->gc_wakelock);
 		}
 	} else {
 		if (wake_lock_active(&gc_th->gc_wakelock)) {
-			f2fs_msg(sbi->sb, KERN_INFO,
-					"Unlocking wakelock for GC\n");
+			f2fs_msg(sbi->sb, KERN_INFO, "Unlocking wakelock for GC");
 			wake_unlock(&gc_th->gc_wakelock);
 		}
 	}
@@ -49,6 +48,7 @@ static int gc_thread_func(void *data)
 {
 	struct f2fs_sb_info *sbi = data;
 	struct f2fs_gc_kthread *gc_th = sbi->gc_thread;
+	struct discard_cmd_control *dcc = SM_I(sbi)->dcc_info;
 	wait_queue_head_t *wq = &sbi->gc_thread->gc_wait_queue_head;
 	unsigned int wait_ms = gc_th->min_sleep_time;
 	bool force_gc;
@@ -63,7 +63,7 @@ static int gc_thread_func(void *data)
 		force_gc = TRIGGER_SOFF;
 		if (force_gc) {
 			gc_set_wakelock(sbi, gc_th, true);
-			wait_ms = soff_wait_ms;
+			wait_ms = SOFF_WAIT_MS;
 			sbi->gc_mode = GC_URGENT;
 		} else {
 			gc_set_wakelock(sbi, gc_th, false);
@@ -83,8 +83,10 @@ static int gc_thread_func(void *data)
 			break;
 
 		if (sbi->sb->s_writers.frozen >= SB_FREEZE_WRITE) {
-			if (!force_gc)
+			if (!force_gc) {
 				increase_sleep_time(gc_th, &wait_ms);
+				stat_other_skip_bggc_count(sbi);
+			}
 			continue;
 		}
 
@@ -138,12 +140,16 @@ do_gc:
 		stat_inc_bggc_count(sbi);
 
 		/* if return value is not zero, no victim was selected */
-		if (f2fs_gc(sbi, test_opt(sbi, FORCE_FG_GC), true, NULL_SEGNO)) {
-			wait_ms = gc_th->no_gc_sleep_time;
-			gc_set_wakelock(sbi, gc_th, false);
-			sbi->gc_mode = GC_NORMAL;
-			f2fs_msg(sbi->sb, KERN_INFO,
-				"No more GC victim found, sleeping for %u ms\n", wait_ms);
+		if (f2fs_gc(sbi, force_gc || test_opt(sbi, FORCE_FG_GC), true, NULL_SEGNO)) {
+			/* also wait until all invalid blocks are discarded */
+			if (dcc->undiscard_blks == 0) {
+				wait_ms = gc_th->no_gc_sleep_time;
+				gc_set_wakelock(sbi, gc_th, false);
+				sbi->gc_mode = GC_NORMAL;
+				f2fs_msg(sbi->sb, KERN_INFO,
+					"No more GC victim found, "
+					"sleeping for %u ms", wait_ms);
+			}
 		}
 
 		trace_f2fs_background_gc(sbi->sb, wait_ms,
@@ -184,7 +190,7 @@ int f2fs_start_gc_thread(struct f2fs_sb_info *sbi)
 
 	snprintf(buf, sizeof(buf), "f2fs_gc-%u:%u", MAJOR(dev), MINOR(dev));
 
-	wakeup_source_init(&gc_th->gc_wakelock, buf);
+	wake_lock_init(&gc_th->gc_wakelock, WAKE_LOCK_SUSPEND, buf);
 
 	sbi->gc_thread = gc_th;
 	init_waitqueue_head(&sbi->gc_thread->gc_wait_queue_head);
@@ -204,7 +210,7 @@ void f2fs_stop_gc_thread(struct f2fs_sb_info *sbi)
 	if (!gc_th)
 		return;
 	kthread_stop(gc_th->f2fs_gc_task);
-	wakeup_source_trash(&gc_th->gc_wakelock);
+	wake_lock_destroy(&gc_th->gc_wakelock);
 	kvfree(gc_th);
 	sbi->gc_mode = GC_NORMAL;
 	sbi->gc_thread = NULL;
@@ -235,7 +241,7 @@ void f2fs_start_all_gc_threads(void)
 		} else {
 			f2fs_msg(sbi->sb, KERN_INFO,
 					"Invalid blocks lower than %d%%,"
-					"skipping rapid GC (%u / (%u - %u))\n",
+					"skipping rapid GC (%u / (%u - %u))",
 					RAPID_GC_LIMIT_INVALID_BLOCK,
 					invalid_blocks,
 					sbi->user_block_count,

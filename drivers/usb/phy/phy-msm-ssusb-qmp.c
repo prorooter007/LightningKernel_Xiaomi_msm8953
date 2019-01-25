@@ -121,6 +121,8 @@ struct msm_ssphy_qmp {
 	struct clk		*com_aux_clk;
 	struct clk		*cfg_ahb_clk;
 	struct clk		*pipe_clk;
+	struct clk		*pipe_clk_mux;
+	struct clk		*pipe_clk_ext_src;
 	struct reset_control	*phy_reset;
 	struct reset_control	*phy_phy_reset;
 	struct reset_control	*global_phy_reset;
@@ -823,6 +825,14 @@ static int msm_ssphy_qmp_get_clks(struct msm_ssphy_qmp *phy, struct device *dev)
 		goto err;
 	}
 
+	phy->pipe_clk_mux = devm_clk_get(dev, "pipe_clk_mux");
+	if (IS_ERR(phy->pipe_clk_mux))
+		phy->pipe_clk_mux = NULL;
+
+	phy->pipe_clk_ext_src = devm_clk_get(dev, "pipe_clk_ext_src");
+	if (IS_ERR(phy->pipe_clk_ext_src))
+		phy->pipe_clk_ext_src = NULL;
+
 	phy->ref_clk_src = devm_clk_get(dev, "ref_clk_src");
 	if (IS_ERR(phy->ref_clk_src))
 		phy->ref_clk_src = NULL;
@@ -866,12 +876,17 @@ static void msm_ssphy_qmp_enable_clks(struct msm_ssphy_qmp *phy, bool on)
 		if (phy->cfg_ahb_clk)
 			clk_prepare_enable(phy->cfg_ahb_clk);
 
+		//select PHY pipe clock
+		clk_set_parent(phy->pipe_clk_mux, phy->pipe_clk_ext_src);
 		clk_prepare_enable(phy->pipe_clk);
 		phy->clk_enabled = true;
 	}
 
 	if (phy->clk_enabled && !on) {
 		clk_disable_unprepare(phy->pipe_clk);
+
+		//select XO instead of PHY pipe clock
+		clk_set_parent(phy->pipe_clk_mux, phy->ref_clk_src);
 
 		if (phy->cfg_ahb_clk)
 			clk_disable_unprepare(phy->cfg_ahb_clk);

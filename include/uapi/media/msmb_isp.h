@@ -26,7 +26,6 @@
 #define ISP_STATS_STREAM_BIT  0x80000000
 
 #define VFE_HW_LIMIT 1
-#define ISP_KERNEL_STATE 1
 
 struct msm_vfe_cfg_cmd_list;
 

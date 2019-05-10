@@ -1410,9 +1410,6 @@ static int update_client_paths(struct msm_bus_client *client, bool log_trns,
 			if (dev)
 				msm_bus_commit_single(dev);
 		}
-
-		if (log_trns)
-			getpath_debug(src, lnode, pdata->active_only);
 	}
 	commit_data();
 exit_update_client_paths:

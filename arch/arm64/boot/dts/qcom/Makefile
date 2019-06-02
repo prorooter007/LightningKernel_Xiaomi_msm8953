@@ -576,65 +576,14 @@ dtb-$(CONFIG_ARCH_QM215) += qm215-qrd.dtb
 dtb-$(CONFIG_ARCH_QM215) += qm215-qrd-smb1360.dtb
 
 dtb-$(CONFIG_ARCH_MSM8909) += sdw3100-msm8909w-wtp.dtb \
-	sdw3100-apq8009w-wtp.dtb \
-	sdw3100-apq8009w-alpha.dtb \
-	apq8009-mtp-wcd9326-refboard.dtb \
-	apq8009-robot-som-refboard.dtb \
-	apq8009-robot-rome-refboard.dtb \
-	apq8009-robot-pronto-refboard.dtb \
-	apq8009-dragon.dtb \
-	apq8009-lat-v1.0.dtb \
-	sdw3100-msm8909w-1gb-wtp.dtb \
-	sdw2500-apq8009w-wtp.dtb \
-	sdw2500-msm8909w-wtp.dtb
-
 
 dtb-$(CONFIG_ARCH_SDM450) += sdm450-rcm.dtb \
-	sdm450-cdp.dtb \
-	sdm450-mtp.dtb \
-	sda450-cdp.dtb \
-	sda450-mtp.dtb \
-	sdm450-qrd.dtb \
-	sdm450-pmi8940-mtp.dtb \
-	sdm450-pmi8937-mtp.dtb \
-	sdm450-iot-mtp.dtb \
-	sdm450-qrd-sku4.dtb \
-	sdm450-pmi632-cdp-s2.dtb \
-	sdm450-pmi632-mtp-s3.dtb \
-	sda450-pmi632-cdp-s2.dtb \
-	sda450-pmi632-mtp-s3.dtb
 
 dtb-$(CONFIG_ARCH_SDM632) += sdm632-rumi.dtb \
-	sdm632-cdp-s2.dtb \
-	sdm632-ext-codec-cdp-s3.dtb \
-	sdm632-mtp-s3.dtb \
-	sdm632-ext-codec-mtp-s4.dtb \
-	sdm632-rcm.dtb \
-	sdm632-qrd-sku4.dtb \
-	sdm632-qrd.dtb \
-	sdm632-pm8004-cdp-s2.dtb \
-	sdm632-pm8004-ext-codec-cdp-s3.dtb \
-	sdm632-pm8004-mtp-s3.dtb \
-	sdm632-pm8004-ext-codec-mtp-s4.dtb \
-	sdm632-pm8004-rcm.dtb \
-	sdm632-pm8004-qrd-sku4.dtb \
-	sdm632-pm8004-qrd.dtb
 
 dtb-$(CONFIG_ARCH_SDM439) += sdm439-mtp.dtb \
-	sdm439-cdp.dtb \
-	sdm439-qrd.dtb \
-	sda439-mtp.dtb \
-	sda439-cdp.dtb \
-	sdm439-external-codec-mtp.dtb \
-	sdm439-rcm.dtb \
-	qm215-qrd.dtb \
-	qm215-qrd-smb1360.dtb
 
 dtb-$(CONFIG_ARCH_SDM429) += sdm429-mtp.dtb \
-	sdm429-cdp.dtb \
-	sdm429-qrd.dtb \
-	sda429-mtp.dtb \
-	sda429-cdp.dtb
 
 endif
 

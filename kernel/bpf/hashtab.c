@@ -163,7 +163,7 @@ static struct bpf_map *htab_map_alloc(union bpf_attr *attr)
 	BUILD_BUG_ON(offsetof(struct htab_elem, fnode.next) !=
 		     offsetof(struct htab_elem, hash_node.pprev));
 
-	if (attr->map_flags & ~HTAB_CREATE_FLAG_MASK)
+	if (attr->map_flags & ~BPF_F_NO_PREALLOC)
 		/* reserved bits should not be used */
 		return ERR_PTR(-EINVAL);
 

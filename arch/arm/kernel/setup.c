@@ -723,6 +723,11 @@ struct proc_info_list *lookup_processor(u32 midr)
 {
 	struct proc_info_list *list;
 
+	/*
+	 * locate processor in the list of supported processor
+	 * types.  The linker builds this table for us from the
+	 * entries in arch/arm/mm/proc-*.S
+	 */
 	arm_init_bp_hardening();
 	list = lookup_processor_type(midr);
 	if (!list) {

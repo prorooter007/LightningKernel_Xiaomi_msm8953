@@ -118,13 +118,13 @@ ENTRY(cpu_do_suspend)
 	mrs	x10, oslsr_el1
 	mrs	x11, sctlr_el1
 	mrs	x12, tpidr_el1
-	mrs	x13, sp_el0
+        mrs     x13, sp_el0
 	stp	x2, x3, [x0]
 	stp	x4, x5, [x0, #16]
 	stp	x6, x7, [x0, #32]
 	stp	x8, x9, [x0, #48]
 	stp	x10, x11, [x0, #64]
-	stp	x12, x13, [x0, #80]
+	stp     x12, x13, [x0, #80]
 	ret
 ENDPROC(cpu_do_suspend)
 

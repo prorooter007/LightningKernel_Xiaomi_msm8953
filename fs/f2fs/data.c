@@ -1756,7 +1756,8 @@ int do_write_data_page(struct f2fs_io_info *fio)
 		if (!f2fs_is_valid_blkaddr(fio->sbi, fio->old_blkaddr,
 							DATA_GENERIC))
 			return -EFAULT;
- 		ipu_force = true;
+
+		ipu_force = true;
 		fio->need_lock = LOCK_DONE;
 		goto got_it;
 	}

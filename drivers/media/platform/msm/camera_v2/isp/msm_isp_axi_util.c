@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2019, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2013-2018, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -537,12 +537,6 @@ static void msm_isp_cfg_framedrop_reg(
 	uint32_t framedrop_period = MSM_VFE_STREAM_STOP_PERIOD;
 	enum msm_vfe_input_src frame_src = SRC_TO_INTF(stream_info->stream_src);
 	int i;
-
-	if (vfe_dev == NULL) {
-		pr_err("%s %d returning vfe_dev is NULL\n",
-			__func__,  __LINE__);
-		return;
-	}
 
 	if (vfe_dev->axi_data.src_info[frame_src].frame_id >=
 		stream_info->init_frame_drop)

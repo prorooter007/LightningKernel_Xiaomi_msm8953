@@ -1479,7 +1479,7 @@ static ssize_t qpnp_haptics_store_duration(struct device *dev,
 {
 	struct led_classdev *cdev = dev_get_drvdata(dev);
 	struct hap_chip *chip = container_of(cdev, struct hap_chip, cdev);
-	u32 val;
+	u32 val, old_vmax_mv;
 	int rc;
 
 	rc = kstrtouint(buf, 0, &val);

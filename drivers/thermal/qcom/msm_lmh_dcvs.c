@@ -564,6 +564,23 @@ static int limits_dcvs_probe(struct platform_device *pdev)
 		return -EINVAL;
 	};
 
+	no_cdev_register = of_property_read_bool(dn,
+				"qcom,no-cooling-device-register");
+
+	addr = of_get_address(dn, 0, NULL, NULL);
+	if (!addr) {
+		pr_err("Property llm-base-addr not found\n");
+		return -EINVAL;
+	}
+	clear_reg = be32_to_cpu(addr[0]) + LIMITS_CLUSTER_INT_CLR_OFFSET;
+	min_reg = be32_to_cpu(addr[0]) + LIMITS_CLUSTER_MIN_FREQ_OFFSET;
+	addr = of_get_address(dn, 1, NULL, NULL);
+	if (!addr) {
+		pr_err("Property osm-base-addr not found\n");
+		return -EINVAL;
+	}
+	request_reg = be32_to_cpu(addr[0]) + LIMITS_CLUSTER_REQ_OFFSET;
+
 	/*
 	 * Setup virtual thermal zones for each LMH-DCVS hardware
 	 * The sensor does not do actual thermal temperature readings

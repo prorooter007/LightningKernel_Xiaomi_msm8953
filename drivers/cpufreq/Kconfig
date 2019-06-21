@@ -361,23 +361,23 @@ config CPU_FREQ_GOV_SMURFUTIL
 	  
           If in doubt, say N.
 
-if CPU_FREQ_GOV_SCHEDUTIL
-
-config SCHEDUTIL_UP_RATE_LIMIT
-	int "Default up rate-limit for schedutil"
-	default 500
+config CPU_FREQ_GOV_LIGHTNINGUTIL
+	bool "'lightningutil' cpufreq policy governor"
+	depends on CPU_FREQ && SMP
+	select CPU_FREQ_GOV_ATTR_SET
+	select IRQ_WORK
 	help
-	  This sets schedutil's default frequency up rate-limit in
-	  microseconds.
+	  This governor makes decisions based on the utilization data provided
+	  by the scheduler.  It sets the CPU frequency to be proportional to
+	  the utilization/capacity ratio coming from the scheduler.  If the
+	  utilization is frequency-invariant, the new frequency is also
+	  proportional to the maximum available frequency.  If that is not the
+	  case, it is proportional to the current frequency of the CPU.  The
+	  frequency tipping point is at utilization/capacity equal to 80% in
+	  both cases.
 
-config SCHEDUTIL_DOWN_RATE_LIMIT
-	int "Default down rate-limit for schedutil"
-	default 20000
-	help
-	  This sets schedutil's default frequency down rate-limit in
-	  microseconds.
+          If in doubt, say N.
 
-endif
 
 config CPU_FREQ_GOV_PIXEL_SMURFUTIL
 	bool "'pixel_smurfutil' cpufreq policy governor"
@@ -395,6 +395,25 @@ config CPU_FREQ_GOV_PIXEL_SMURFUTIL
 	  both cases.
 
           If in doubt, say N.
+
+
+if CPU_FREQ_GOV_SCHEDUTIL
+
+config SCHEDUTIL_UP_RATE_LIMIT
+	int "Default up rate-limit for schedutil"
+	default 500
+	help
+	  This sets schedutil's default frequency up rate-limit in
+	  microseconds.
+
+config SCHEDUTIL_DOWN_RATE_LIMIT
+	int "Default down rate-limit for schedutil"
+	default 20000
+	help
+	  This sets schedutil's default frequency down rate-limit in
+	  microseconds.
+
+endif
 
 comment "CPU frequency scaling drivers"
 

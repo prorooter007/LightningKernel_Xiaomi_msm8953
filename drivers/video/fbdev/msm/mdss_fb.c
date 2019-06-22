@@ -59,7 +59,7 @@
 #include "mdss_sync.h"
 
 #ifdef CONFIG_KLAPSE
-#include <linux/klapse.h>
+#include "klapse.h"
 #endif
 
 #ifdef CONFIG_FB_MSM_TRIPLE_BUFFER

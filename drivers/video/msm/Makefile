@@ -1,1 +1,1 @@
-obj-$(CONFIG_KLAPSE) += mdss/klapse.o
+msm_drm-$(CONFIG_KLAPSE) += sde/klapse.o

@@ -57,10 +57,6 @@
 #include "mdp3_ctrl.h"
 #include "mdss_dsi.h"
 
-#ifdef CONFIG_KLAPSE
-#include <linux/klapse.h>
-#endif
-
 #ifdef CONFIG_FB_MSM_TRIPLE_BUFFER
 #define MDSS_FB_NUM 3
 #else
@@ -327,9 +323,6 @@ static void mdss_fb_set_bl_brightness(struct led_classdev *led_cdev,
 							!mfd->bl_level)) {
 		mutex_lock(&mfd->bl_lock);
 		mdss_fb_set_backlight(mfd, bl_lvl);
-#ifdef CONFIG_KLAPSE
-                set_rgb_slider(bl_lvl);
-#endif
 		mutex_unlock(&mfd->bl_lock);
 	}
 }

@@ -49,4 +49,3 @@ endif
 
 
 endmenu
-source "drivers/video/klapse/Kconfig"

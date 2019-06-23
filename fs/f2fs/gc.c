@@ -15,6 +15,7 @@
 #include <linux/freezer.h>
 #include <linux/fb.h>
 #include <linux/power_supply.h>
+#include <linux/wakelock.h>
 
 #include "f2fs.h"
 #include "node.h"
@@ -30,14 +31,14 @@ static unsigned int soff_wait_ms = 1;
 static inline void gc_set_wakelock(struct f2fs_gc_kthread *gc_th, bool val)
 {
 	if (val) {
-		if (!gc_th->gc_wakelock.active) {
-			f2fs_msg(sbi->sb, KERN_INFO, "Catching wakelock for GC");
-			__pm_stay_awake(&gc_th->gc_wakelock);
+		if (!wake_lock_active(&gc_th->gc_wakelock)) {
+			pr_info("f2fs: catching wakelock for GC\n");
+			wake_lock(&gc_th->gc_wakelock);
 		}
 	} else {
-		if (gc_th->gc_wakelock.active) {
-			f2fs_msg(sbi->sb, KERN_INFO, "Unlocking wakelock for GC");
-			__pm_relax(&gc_th->gc_wakelock);
+		if (wake_lock_active(&gc_th->gc_wakelock)) {
+			pr_info("f2fs: unlocking wakelock for GC\n");
+			wake_unlock(&gc_th->gc_wakelock);
 		}
 	}
 }
@@ -179,7 +180,7 @@ int f2fs_start_gc_thread(struct f2fs_sb_info *sbi)
 
 	snprintf(buf, sizeof(buf), "f2fs_gc-%u:%u", MAJOR(dev), MINOR(dev));
 
-	wakeup_source_init(&gc_th->gc_wakelock, buf);
+	wake_lock_init(&gc_th->gc_wakelock, WAKE_LOCK_SUSPEND, buf);
 
 	sbi->gc_thread = gc_th;
 	init_waitqueue_head(&sbi->gc_thread->gc_wait_queue_head);
@@ -199,9 +200,8 @@ void f2fs_stop_gc_thread(struct f2fs_sb_info *sbi)
 	if (!gc_th)
 		return;
 	kthread_stop(gc_th->f2fs_gc_task);
-	wakeup_source_trash(&gc_th->gc_wakelock);
-	kvfree(gc_th);
-	sbi->gc_mode = GC_NORMAL;
+	wake_lock_destroy(&gc_th->gc_wakelock);
+	kfree(gc_th);
 	sbi->gc_thread = NULL;
 }
 

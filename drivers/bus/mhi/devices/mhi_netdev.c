@@ -138,7 +138,10 @@ struct mhi_netbuf {
 };
 
 static struct mhi_driver mhi_netdev_driver;
+
+#ifdef CONFIG_DEBUG_FS
 static void mhi_netdev_create_debugfs(struct mhi_netdev *mhi_netdev);
+#endif
 
 static __be16 mhi_netdev_ip_type_trans(u8 data)
 {
@@ -921,7 +924,7 @@ static void mhi_netdev_create_debugfs_dir(void)
 
 #else
 
-static void mhi_netdev_create_debugfs(struct mhi_netdev_private *mhi_netdev)
+static void mhi_netdev_create_debugfs(struct mhi_netdev *mhi_netdev)
 {
 }
 

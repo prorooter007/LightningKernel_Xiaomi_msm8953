@@ -828,8 +828,8 @@ static int __check_input_term(struct mixer_build *state, int id,
 			} else {
 				struct uac_selector_unit_descriptor *d = p1;
 				/* call recursively to retrieve channel info */
-				err = check_input_term(state,
-							d->baSourceID[0], term);
+                                err = __check_input_term(state,
+                                                        d->baSourceID[0], term);
 				if (err < 0)
 					return err;
 				/* virtual type */

@@ -1024,7 +1024,7 @@ static void destroy_device_list(struct f2fs_sb_info *sbi)
 	for (i = 0; i < sbi->s_ndevs; i++) {
 		blkdev_put(FDEV(i).bdev, FMODE_EXCL);
 #ifdef CONFIG_BLK_DEV_ZONED
-		kvfree(FDEV(i).blkz_seq);
+		kvfree(FDEV(i).blkz_type);
 #endif
 	}
 	kvfree(sbi->devs);
@@ -1227,8 +1227,6 @@ static int f2fs_statfs(struct dentry *dentry, struct kstatfs *buf)
 	buf->f_blocks = total_count - start_count;
 	buf->f_bfree = user_block_count - valid_user_blocks(sbi) -
 						sbi->current_reserved_blocks;
-
-	spin_lock(&sbi->stat_lock);
 	if (unlikely(buf->f_bfree <= sbi->unusable_block_count))
 		buf->f_bfree = 0;
 	else
@@ -2637,24 +2635,6 @@ int f2fs_sanity_check_ckpt(struct f2fs_sb_info *sbi)
 		return 1;
 	}
 
-	valid_user_blocks = le64_to_cpu(ckpt->valid_block_count);
-	if (valid_user_blocks > user_block_count) {
-		f2fs_msg(sbi->sb, KERN_ERR,
-			"Wrong valid_user_blocks: %u, user_block_count: %u",
-			valid_user_blocks, user_block_count);
-		return 1;
-	}
-
-	valid_node_count = le32_to_cpu(ckpt->valid_node_count);
-	avail_node_count = sbi->total_node_count - sbi->nquota_files -
-						F2FS_RESERVED_NODE_NUM;
-	if (valid_node_count > avail_node_count) {
-		f2fs_msg(sbi->sb, KERN_ERR,
-			"Wrong valid_node_count: %u, avail_node_count: %u",
-			valid_node_count, avail_node_count);
-		return 1;
-	}
-
 	main_segs = le32_to_cpu(raw_super->segment_count_main);
 	blocks_per_seg = sbi->blocks_per_seg;
 
@@ -3338,8 +3318,6 @@ try_onemore:
 		err = PTR_ERR(sbi->node_inode);
 		goto free_stats;
 	}
-
-	f2fs_sbi_list_add(sbi);
 
 	/* read root inode and dentry */
 	root = f2fs_iget(sb, F2FS_ROOT_INO(sbi));

@@ -1048,7 +1048,7 @@ struct f2fs_io_info {
 	bool submitted;		/* indicate IO submission */
 	int need_lock;		/* indicate we need to lock cp_rwsem */
 	bool in_list;		/* indicate fio is in io_list */
-	bool is_por;		/* indicate IO is from recovery or not */
+	bool is_meta;		/* indicate borrow meta inode mapping or not */
 	bool retry;		/* need to reallocate block address */
 	enum iostat_type io_type;	/* io type */
 	struct writeback_control *io_wbc; /* writeback control */
@@ -1334,8 +1334,6 @@ struct f2fs_sb_info {
 
 	/* Precomputed FS UUID checksum for seeding other checksums */
 	__u32 s_chksum_seed;
-
-	struct list_head list;
 };
 
 struct f2fs_private_dio {
@@ -2051,17 +2049,9 @@ static inline void dec_valid_node_count(struct f2fs_sb_info *sbi,
 
 	spin_unlock(&sbi->stat_lock);
 
-	if (is_inode) {
+	if (is_inode)
 		dquot_free_inode(inode);
-	} else {
-		if (unlikely(inode->i_blocks == 0)) {
-			f2fs_msg(sbi->sb, KERN_WARNING,
-				"Inconsistent i_blocks, ino:%lu, iblocks:%llu",
-				inode->i_ino,
-				(unsigned long long)inode->i_blocks);
-			set_sbi_flag(sbi, SBI_NEED_FSCK);
-			return;
-		}
+	else
 		f2fs_i_blocks_write(inode, 1, false, true);
 	}
 }
@@ -3624,25 +3614,7 @@ static inline bool f2fs_hw_should_discard(struct f2fs_sb_info *sbi)
 
 static inline bool f2fs_bdev_support_discard(struct block_device *bdev)
 {
-	return blk_queue_discard(bdev_get_queue(bdev)) ||
-#ifdef CONFIG_BLK_DEV_ZONED
-	       bdev_is_zoned(bdev);
-#else
-	       0;
-#endif
-}
-
-static inline bool f2fs_hw_support_discard(struct f2fs_sb_info *sbi)
-{
-	int i;
-
-	if (!f2fs_is_multi_device(sbi))
-		return f2fs_bdev_support_discard(sbi->sb->s_bdev);
-
-	for (i = 0; i < sbi->s_ndevs; i++)
-		if (f2fs_bdev_support_discard(FDEV(i).bdev))
-			return true;
-	return false;
+	return blk_queue_discard(bdev_get_queue(sbi->sb->s_bdev));
 }
 
 static inline bool f2fs_realtime_discard_enable(struct f2fs_sb_info *sbi)

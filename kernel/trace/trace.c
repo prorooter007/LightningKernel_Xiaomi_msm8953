@@ -4694,7 +4694,7 @@ tracing_saved_tgids_read(struct file *file, char __user *ubuf,
 	preempt_disable();
 	arch_spin_lock(&trace_cmdline_lock);
 
-	pids = kmalloc_array(savedcmd->cmdline_num, 2*sizeof(int), GFP_ATOMIC);
+	pids = kmalloc_array(savedcmd->cmdline_num, 2*sizeof(int), GFP_KERNEL);
 	if (!pids) {
 		arch_spin_unlock(&trace_cmdline_lock);
 		preempt_enable();

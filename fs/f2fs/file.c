@@ -1024,14 +1024,6 @@ next_dnode:
 	for (i = 0; i < done; i++, blkaddr++, do_replace++, dn.ofs_in_node++) {
 		*blkaddr = datablock_addr(dn.inode,
 					dn.node_page, dn.ofs_in_node);
-
-		if (__is_valid_data_blkaddr(*blkaddr) &&
-			!f2fs_is_valid_blkaddr(sbi, *blkaddr,
-					DATA_GENERIC_ENHANCE)) {
-			f2fs_put_dnode(&dn);
-			return -EFAULT;
-		}
-
 		if (!f2fs_is_checkpointed_data(sbi, *blkaddr)) {
 
 			if (test_opt(sbi, LFS)) {
@@ -2581,7 +2573,7 @@ static int f2fs_ioc_flush_device(struct file *filp, unsigned long arg)
 							sizeof(range)))
 		return -EFAULT;
 
-	if (!f2fs_is_multi_device(sbi) || sbi->s_ndevs - 1 <= range.dev_num ||
+	if (sbi->s_ndevs <= 1 || sbi->s_ndevs - 1 <= range.dev_num ||
 			__is_large_section(sbi)) {
 		f2fs_msg(sbi->sb, KERN_WARNING,
 			"Can't flush %u in %d for segs_per_sec %u != 1",
@@ -2849,13 +2841,15 @@ static ssize_t f2fs_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
 		if ((iocb->ki_flags & IOCB_NOWAIT)) {
 			if (!f2fs_overwrite_io(inode, iocb->ki_pos,
 						iov_iter_count(from)) ||
-				f2fs_has_inline_data(inode) ||
-				f2fs_force_buffered_io(inode, iocb, from)) {
-				clear_inode_flag(inode, FI_NO_PREALLOC);
-				inode_unlock(inode);
-				ret = -EAGAIN;
-				goto out;
-			}
+					f2fs_has_inline_data(inode) ||
+					f2fs_force_buffered_io(inode,
+							iocb, from)) {
+						clear_inode_flag(inode,
+								FI_NO_PREALLOC);
+						inode_unlock(inode);
+						return -EAGAIN;
+				}
+
 		} else {
 			preallocated = true;
 			target_size = iocb->ki_pos + iov_iter_count(from);

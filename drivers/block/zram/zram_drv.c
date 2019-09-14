@@ -1109,6 +1109,7 @@ static ssize_t mm_stat_show(struct device *dev,
 
 	return ret;
 }
+#endif
 
 #ifdef CONFIG_ZRAM_WRITEBACK
 #define FOUR_K(x) ((x) * (1 << (PAGE_SHIFT - 12)))
@@ -1198,7 +1199,7 @@ static void zram_free_page(struct zram *zram, size_t index)
 	unsigned long handle;
 
 #ifdef CONFIG_ZRAM_MEMORY_TRACKING
-	zram->table[index].ac_time = 0;
+	zram->table[index].ac_time.tv64 = 0;
 #endif
 	if (zram_test_flag(zram, index, ZRAM_IDLE))
 		zram_clear_flag(zram, index, ZRAM_IDLE);
@@ -1975,6 +1976,9 @@ static int zram_add(void)
 	else
 		zram->disk->queue->limits.discard_zeroes_data = 0;
 	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, zram->disk->queue);
+
+	zram->disk->queue->backing_dev_info.capabilities |=
+					BDI_CAP_STABLE_WRITES;
 
 	disk_to_dev(zram->disk)->groups = zram_disk_attr_groups;
 

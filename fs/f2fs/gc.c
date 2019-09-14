@@ -111,9 +111,8 @@ static int gc_thread_func(void *data)
 		 * invalidated soon after by user update or deletion.
 		 * So, I'd like to wait some time to collect dirty segments.
 		 */
-		if (sbi->gc_mode == GC_URGENT || force_gc) {
-			if (!force_gc)
-				wait_ms = gc_th->urgent_sleep_time;
+		if (sbi->gc_mode == GC_URGENT) {
+			wait_ms = gc_th->urgent_sleep_time;
 			mutex_lock(&sbi->gc_mutex);
 			goto do_gc;
 		}
@@ -187,7 +186,6 @@ int f2fs_start_gc_thread(struct f2fs_sb_info *sbi)
 	gc_th->max_sleep_time = DEF_GC_THREAD_MAX_SLEEP_TIME;
 	gc_th->no_gc_sleep_time = DEF_GC_THREAD_NOGC_SLEEP_TIME;
 
-	sbi->gc_mode = GC_NORMAL;
 	gc_th->gc_wake= 0;
 
 	snprintf(buf, sizeof(buf), "f2fs_gc-%u:%u", MAJOR(dev), MINOR(dev));
@@ -1358,7 +1356,6 @@ static int do_garbage_collect(struct f2fs_sb_info *sbi,
 				"type [%d, %d] in SSA and SIT",
 				segno, type, GET_SUM_TYPE((&sum->footer)));
 			set_sbi_flag(sbi, SBI_NEED_FSCK);
-			f2fs_stop_checkpoint(sbi, false);
 			goto skip;
 		}
 
@@ -1418,7 +1415,7 @@ int f2fs_gc(struct f2fs_sb_info *sbi, bool sync,
 	unsigned int skipped_round = 0, round = 0;
 	struct super_block *sb = sbi->sb;
 
-	trace_f2fs_gc_begin(sb, sync, background,
+	trace_f2fs_gc_begin(sbi->sb, sync, background,
 				get_pages(sbi, F2FS_DIRTY_NODES),
 				get_pages(sbi, F2FS_DIRTY_DENTS),
 				get_pages(sbi, F2FS_DIRTY_IMETA),
@@ -1538,7 +1535,7 @@ void f2fs_build_gc_manager(struct f2fs_sb_info *sbi)
 	sbi->gc_pin_file_threshold = DEF_GC_FAILED_PINNED_FILES;
 
 	/* give warm/cold data area from slower device */
-	if (f2fs_is_multi_device(sbi) && !__is_large_section(sbi))
+	if (sbi->s_ndevs && !__is_large_section(sbi))
 		SIT_I(sbi)->last_victim[ALLOC_NEXT] =
 				GET_SEGNO(sbi, FDEV(0).end_blk) + 1;
 }

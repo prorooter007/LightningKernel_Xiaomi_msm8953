@@ -770,7 +770,7 @@ static int __check_input_term(struct mixer_build *state, int id,
 			} else { /* UAC_VERSION_3 */
 				struct uac3_input_terminal_descriptor *d = p1;
 
-				err = check_input_term(state,
+				err = __check_input_term(state,
 							d->bCSourceID, term);
 				if (err < 0)
 					return err;
@@ -828,7 +828,7 @@ static int __check_input_term(struct mixer_build *state, int id,
 			} else {
 				struct uac_selector_unit_descriptor *d = p1;
 				/* call recursively to retrieve channel info */
-				err = check_input_term(state,
+				err = __check_input_term(state,
 							d->baSourceID[0], term);
 				if (err < 0)
 					return err;
@@ -892,7 +892,6 @@ static int __check_input_term(struct mixer_build *state, int id,
 	return -ENODEV;
 }
 
-
 static int check_input_term(struct mixer_build *state, int id,
 			    struct usb_audio_term *term)
 {
@@ -900,6 +899,7 @@ static int check_input_term(struct mixer_build *state, int id,
 	memset(state->termbitmap, 0, sizeof(state->termbitmap));
 	return __check_input_term(state, id, term);
 }
+
 
 /*
  * Feature Unit
@@ -1972,7 +1972,9 @@ static int parse_audio_mixer_unit(struct mixer_build *state, int unitid,
 	} else {
 		input_pins = desc->bNrInPins;
 		num_outs = uac_mixer_unit_bNrChannels(desc);
-		if (desc->bLength < 11 || !input_pins || !num_outs) {
+		if (desc->bLength < 11 || !input_pins ||
+		    desc->bLength < sizeof(*desc) + desc->bNrInPins ||
+		    !num_outs) {
 			usb_audio_err(state->chip,
 				      "invalid MIXER UNIT descriptor %d\n",
 				      unitid);

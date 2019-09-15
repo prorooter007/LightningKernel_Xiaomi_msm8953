@@ -432,8 +432,6 @@ static void adreno_pwr_on_work(struct work_struct *work)
 	mutex_unlock(&device->mutex);
 }
 
-static int adreno_soft_reset(struct kgsl_device *device);
-
 /*
  * _soft_reset() - Soft reset GPU
  * @adreno_dev: Pointer to adreno device

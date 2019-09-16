@@ -2053,7 +2053,6 @@ static inline void dec_valid_node_count(struct f2fs_sb_info *sbi,
 		dquot_free_inode(inode);
 	else
 		f2fs_i_blocks_write(inode, 1, false, true);
-	}
 }
 
 static inline unsigned int valid_node_count(struct f2fs_sb_info *sbi)

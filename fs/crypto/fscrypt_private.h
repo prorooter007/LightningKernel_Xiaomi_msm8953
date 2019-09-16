@@ -125,12 +125,6 @@ static inline bool fscrypt_valid_enc_modes(u32 contents_mode,
 	return false;
 }
 
-static inline bool is_private_data_mode(struct fscrypt_info *ci)
-{
-	return ci->ci_mode == CI_DATA_MODE &&
-		ci->ci_data_mode == FS_ENCRYPTION_MODE_PRIVATE;
-}
-
 /* crypto.c */
 extern struct kmem_cache *fscrypt_info_cachep;
 extern int fscrypt_initialize(unsigned int cop_flags);

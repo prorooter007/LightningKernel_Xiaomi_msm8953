@@ -93,6 +93,9 @@ struct fscrypt_info {
 	u8 ci_flags;
 	u8 ci_master_key_descriptor[FS_KEY_DESCRIPTOR_SIZE];
 	u8 ci_nonce[FS_KEY_DERIVATION_NONCE_SIZE];
+
+	/* Raw key, only for inline encryption w/ FS_ENCRYPTION_MODE_PRIVATE */
+         u8 ci_raw_key[FS_MAX_KEY_SIZE];
 };
 
 typedef enum {

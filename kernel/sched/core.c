@@ -3673,7 +3673,6 @@ static void __sched notrace __schedule(bool preempt)
 		rq = context_switch(rq, prev, next, &rf); /* unlocks the rq */
 	} else {
 		update_task_ravg(prev, rq, TASK_UPDATE, wallclock, 0);
-		lockdep_unpin_lock(&rq->lock, cookie);
 		rq_unpin_lock(rq, &rf);
 		raw_spin_unlock_irq(&rq->lock);
 	}
@@ -5893,7 +5892,7 @@ static void migrate_tasks(struct rq *dead_rq, bool migrate_pinned_tasks)
 			!cpumask_intersects(&avail_cpus, &next->cpus_allowed)) {
 			detach_one_task(next, rq, &tasks);
 			num_pinned_kthreads += 1;
-			lockdep_unpin_lock(&rq->lock, cookie);
+			rq_unpin_lock(rq, &rf);
 			continue;
 		}
 

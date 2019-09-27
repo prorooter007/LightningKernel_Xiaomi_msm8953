@@ -3383,7 +3383,6 @@ void walt_sched_init_rq(struct rq *rq)
 	cpumask_set_cpu(cpu_of(rq), &rq->freq_domain_cpumask);
 	rq->walt_stats.cumulative_runnable_avg = 0;
 	rq->window_start = 0;
-	rq->cum_window_start = 0;
 	rq->walt_stats.nr_big_tasks = 0;
 	rq->walt_flags = 0;
 	rq->cur_irqload = 0;

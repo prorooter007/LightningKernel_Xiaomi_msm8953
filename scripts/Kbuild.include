@@ -91,6 +91,7 @@ TMPOUT = $(if $(KBUILD_EXTMOD),$(firstword $(KBUILD_EXTMOD))/).tmp_$$$$
 try-run = $(shell set -e;		\
 	TMP=$(TMPOUT)/tmp;		\
 	TMPO=$(TMPOUT)/tmp.o;		\
+    echo "Testing $(1)..." >> testing.log; \
 	mkdir -p $(TMPOUT);		\
 	trap "rm -rf $(TMPOUT)" EXIT;	\
 	if ($(1)) >/dev/null 2>&1;	\

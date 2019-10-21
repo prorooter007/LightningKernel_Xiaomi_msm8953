@@ -153,6 +153,9 @@ static int read_eeprom_memory(struct msm_eeprom_ctrl_t *e_ctrl,
 	struct msm_eeprom_memory_map_t *emap = block->map;
 	struct msm_eeprom_board_info *eb_info;
 	uint8_t *memptr = block->mapdata;
+#ifdef CONFIG_MACH_XIAOMI_TISSOT
+	uint8_t sensor_id[2] = {0};
+#endif
 
 	if (!e_ctrl) {
 		pr_err("%s e_ctrl is NULL", __func__);
@@ -160,6 +163,17 @@ static int read_eeprom_memory(struct msm_eeprom_ctrl_t *e_ctrl,
 	}
 
 	eb_info = e_ctrl->eboard_info;
+
+#ifdef CONFIG_MACH_XIAOMI_TISSOT
+	e_ctrl->i2c_client.addr_type = 2;
+	rc = e_ctrl->i2c_client.i2c_func_tbl->i2c_read_seq(
+			&(e_ctrl->i2c_client), 0x0000,
+			sensor_id, 2);
+	if (rc < 0) {
+		pr_err("%s error\n", __func__);
+		return rc;
+	}
+#endif
 
 	for (j = 0; j < block->num_map; j++) {
 		if (emap[j].saddr.addr) {
@@ -175,7 +189,17 @@ static int read_eeprom_memory(struct msm_eeprom_ctrl_t *e_ctrl,
 			rc = e_ctrl->i2c_client.i2c_func_tbl->i2c_write(
 				&(e_ctrl->i2c_client), emap[j].page.addr,
 				emap[j].page.data, emap[j].page.data_t);
+
+#ifdef CONFIG_MACH_XIAOMI_TISSOT
+			if (emap[j].page.delay > 20)
+			    msleep(emap[j].page.delay);
+			else if (emap[j].page.delay)
+			    usleep_range(emap[j].page.delay * 1000,
+				(emap[j].page.delay * 1000) + 1000);
+#else
 				msleep(emap[j].page.delay);
+#endif
+
 			if (rc < 0) {
 				pr_err("%s: page write failed\n", __func__);
 				return rc;
@@ -186,7 +210,17 @@ static int read_eeprom_memory(struct msm_eeprom_ctrl_t *e_ctrl,
 			rc = e_ctrl->i2c_client.i2c_func_tbl->i2c_write(
 				&(e_ctrl->i2c_client), emap[j].pageen.addr,
 				emap[j].pageen.data, emap[j].pageen.data_t);
+
+#ifdef CONFIG_MACH_XIAOMI_TISSOT
+			if (emap[j].pageen.delay > 20)
 				msleep(emap[j].pageen.delay);
+			else if (emap[j].pageen.delay)
+				usleep_range(emap[j].pageen.delay * 1000,
+						(emap[j].pageen.delay * 1000) + 1000);
+#else
+                                msleep(emap[j].pageen.delay);
+#endif
+
 			if (rc < 0) {
 				pr_err("%s: page enable failed\n", __func__);
 				return rc;
@@ -369,7 +403,17 @@ static int eeprom_parse_memory_map(struct msm_eeprom_ctrl_t *e_ctrl,
 					eeprom_map->mem_settings[i].reg_addr,
 					eeprom_map->mem_settings[i].reg_data,
 					eeprom_map->mem_settings[i].data_type);
+
+#ifdef CONFIG_MACH_XIAOMI_TISSOT
+				if (eeprom_map->mem_settings[i].delay > 20)
+					msleep(eeprom_map->mem_settings[i].delay);
+				else if (eeprom_map->mem_settings[i].delay)
+					usleep_range(eeprom_map->mem_settings[i].delay * 1000,
+							(eeprom_map->mem_settings[i].delay * 1000) + 1000);
+#else
 				msleep(eeprom_map->mem_settings[i].delay);
+#endif
+
 				if (rc < 0) {
 					pr_err("%s: page write failed\n",
 						__func__);
@@ -401,7 +445,17 @@ static int eeprom_parse_memory_map(struct msm_eeprom_ctrl_t *e_ctrl,
 					eeprom_map->mem_settings[i].reg_addr,
 					memptr,
 					eeprom_map->mem_settings[i].reg_data);
+
+#ifdef CONFIG_MACH_XIAOMI_TISSOT
+				if (eeprom_map->mem_settings[i].delay > 20)
+					msleep(eeprom_map->mem_settings[i].delay);
+				else if (eeprom_map->mem_settings[i].delay)
+					usleep_range(eeprom_map->mem_settings[i].delay * 1000,
+							(eeprom_map->mem_settings[i].delay * 1000) + 1000);
+#else
 				msleep(eeprom_map->mem_settings[i].delay);
+#endif
+
 				if (rc < 0) {
 					pr_err("%s: read failed\n",
 						__func__);
@@ -1056,7 +1110,7 @@ static int msm_eeprom_i2c_probe(struct i2c_client *client,
 	snprintf(e_ctrl->msm_sd.sd.name,
 		ARRAY_SIZE(e_ctrl->msm_sd.sd.name), "msm_eeprom");
 	media_entity_pads_init(&e_ctrl->msm_sd.sd.entity, 0, NULL);
-	e_ctrl->msm_sd.sd.entity.function = MSM_CAMERA_SUBDEV_EEPROM;
+	e_ctrl->msm_sd.sd.entity.group_id = MSM_CAMERA_SUBDEV_EEPROM;
 	msm_sd_register(&e_ctrl->msm_sd);
 	e_ctrl->is_supported = (e_ctrl->is_supported << 1) | 1;
 	pr_err("%s success result=%d X\n", __func__, rc);
@@ -1348,7 +1402,7 @@ static int msm_eeprom_spi_setup(struct spi_device *spi)
 	e_ctrl->msm_sd.sd.internal_ops = &msm_eeprom_internal_ops;
 	e_ctrl->msm_sd.sd.flags |= V4L2_SUBDEV_FL_HAS_DEVNODE;
 	media_entity_pads_init(&e_ctrl->msm_sd.sd.entity, 0, NULL);
-	e_ctrl->msm_sd.sd.entity.function = MSM_CAMERA_SUBDEV_EEPROM;
+	e_ctrl->msm_sd.sd.entity.group_id = MSM_CAMERA_SUBDEV_EEPROM;
 	msm_sd_register(&e_ctrl->msm_sd);
 	e_ctrl->is_supported = (e_ctrl->is_supported << 1) | 1;
 	CDBG("%s success result=%d supported=%x X\n", __func__, rc,
@@ -1888,7 +1942,7 @@ static int msm_eeprom_platform_probe(struct platform_device *pdev)
 	snprintf(e_ctrl->msm_sd.sd.name,
 		ARRAY_SIZE(e_ctrl->msm_sd.sd.name), "msm_eeprom");
 	media_entity_pads_init(&e_ctrl->msm_sd.sd.entity, 0, NULL);
-	e_ctrl->msm_sd.sd.entity.function = MSM_CAMERA_SUBDEV_EEPROM;
+	e_ctrl->msm_sd.sd.entity.group_id = MSM_CAMERA_SUBDEV_EEPROM;
 	msm_sd_register(&e_ctrl->msm_sd);
 
 #ifdef CONFIG_COMPAT

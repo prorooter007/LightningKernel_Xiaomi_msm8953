@@ -26,15 +26,8 @@
 #define ISP_STATS_STREAM_BIT  0x80000000
 
 #define VFE_HW_LIMIT 1
-#define ISP_KERNEL_STATE 1
 
 struct msm_vfe_cfg_cmd_list;
-
-struct isp_kstate {
-	uint32_t kernel_sofid;
-	uint32_t drop_reconfig;
-	uint32_t vfeid;
-};
 
 enum ISP_START_PIXEL_PATTERN {
 	ISP_BAYER_RGRGRG,
@@ -370,11 +363,18 @@ enum msm_vfe_axi_stream_cmd {
 	STOP_IMMEDIATELY,
 };
 
+enum msm_vfe_hw_state {
+	HW_STATE_NONE,
+	HW_STATE_SLEEP,
+	HW_STATE_AWAKE,
+};
+
 struct msm_vfe_axi_stream_cfg_cmd {
 	uint8_t num_streams;
 	uint32_t stream_handle[VFE_AXI_SRC_MAX];
 	enum msm_vfe_axi_stream_cmd cmd;
 	uint8_t sync_frame_id_src;
+	enum msm_vfe_hw_state hw_state;
 };
 
 enum msm_vfe_axi_stream_update_type {

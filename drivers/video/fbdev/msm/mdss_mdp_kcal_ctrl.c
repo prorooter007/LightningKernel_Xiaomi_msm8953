@@ -24,10 +24,6 @@
 
 #include "mdss_mdp.h"
 
-#ifdef CONFIG_KLAPSE
-#include "klapse.h"
-#endif
-
 #define DEF_PCC 0x100
 #define DEF_PA 0xff
 #define PCC_ADJ 0x80
@@ -226,65 +222,6 @@ static void mdss_mdp_kcal_update_pcc(struct kcal_lut_data *lut_data)
 	mdss_mdp_pcc_config(fb0_ctl->mfd, &pcc_config, &copyback);
 	kfree(payload);
 }
-
-static void mdss_mdp_kcal_read_pcc(struct kcal_lut_data *lut_data)
-{
-	u32 copyback = 0;
-	struct mdp_pcc_cfg_data pcc_config;
-
-	memset(&pcc_config, 0, sizeof(struct mdp_pcc_cfg_data));
-
-	pcc_config.block = MDP_LOGICAL_BLOCK_DISP_0;
-	pcc_config.ops = MDP_PP_OPS_READ;
-
-	mdss_mdp_pcc_config(fb0_ctl->mfd, &pcc_config, &copyback);
-
-	/* LiveDisplay disables pcc when using default values and regs
-	 * are zeroed on pp resume, so throw these values out.
-	 */
-	if (!pcc_config.r.r && !pcc_config.g.g && !pcc_config.b.b)
-		return;
-
-	lut_data->red = (pcc_config.r.r & 0xffff) / PCC_ADJ;
-	lut_data->green = (pcc_config.g.g & 0xffff) / PCC_ADJ;
-	lut_data->blue = (pcc_config.b.b & 0xffff) / PCC_ADJ;
-}
-
-#ifdef CONFIG_KLAPSE
-static struct platform_device kcal_ctrl_device;
-
-void kcal_ext_apply_values(int red, int green, int blue)
-{
-	struct kcal_lut_data *lut_data =
-				platform_get_drvdata(&kcal_ctrl_device);
-
-	lut_data->red = red;
-	lut_data->green = green;
-	lut_data->blue = blue;
-
-	if (mdss_mdp_kcal_is_panel_on())
-		mdss_mdp_kcal_update_pcc(lut_data);
-	else
-		lut_data->queue_changes = true;
-}
-
-int kcal_ext_get_value(int color)
-{
-	struct kcal_lut_data *lut_data =
-				platform_get_drvdata(&kcal_ctrl_device);
-
-	switch (color) {
-		case KCAL_RED:
-			return lut_data->red;
-		case KCAL_GREEN:
-			return lut_data->green;
-		case KCAL_BLUE:
-			return lut_data->blue;
-		default:
-			return -1;
-	}
-}
-#endif
 
 static void mdss_mdp_kcal_update_pa(struct kcal_lut_data *lut_data)
 {

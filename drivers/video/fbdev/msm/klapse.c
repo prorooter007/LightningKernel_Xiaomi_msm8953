@@ -637,10 +637,10 @@ static ssize_t brightness_factor_dump(struct device *dev,
     {
         if (brightness_factor_auto_enable == 0)
         {
-          brightness_factor = tmpval;
+          brightness_factor = tmp;
           set_rgb_brightness((K_RED*10)/b_cache, (K_GREEN*10)/b_cache, (K_BLUE*10)/b_cache);
         }
-        b_cache = tmpval;
+        b_cache = tmp;
     }
 
     return count;

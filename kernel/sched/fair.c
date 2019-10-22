@@ -6973,6 +6973,7 @@ struct find_best_target_env {
 	bool need_idle;
 	int placement_boost;
 	bool avoid_prev_cpu;
+	int skip_cpu;
 };
 
 #ifdef CONFIG_SCHED_WALT
@@ -7127,6 +7128,9 @@ retry:
 				continue;
 
 			if (walt_cpu_high_irqload(i) || is_reserved(i))
+				continue;
+
+			if (fbt_env->skip_cpu == i)
 				continue;
 
 			/*
@@ -7547,10 +7551,21 @@ static inline struct cpumask *find_rtg_target(struct task_struct *p)
 
 	return rtg_target;
 }
+
+static inline bool is_many_wakeup(int sibling_count_hint)
+{
+	return sibling_count_hint >= sysctl_sched_many_wakeup_threshold;
+}
+
 #else
 static inline struct cpumask *find_rtg_target(struct task_struct *p)
 {
 	return NULL;
+}
+
+static inline bool is_many_wakeup(int sibling_count_hint)
+{
+	return false;
 }
 #endif
 
@@ -7560,13 +7575,14 @@ enum fastpaths {
 	PREV_CPU_BIAS,
 };
 
-static int select_energy_cpu_brute(struct task_struct *p, int prev_cpu, int sync)
+static int select_energy_cpu_brute(struct task_struct *p, int prev_cpu, int sync, int sibling_count_hint)
 {
 	bool boosted, prefer_idle;
 	struct sched_domain *sd;
 	int target_cpu;
 	int backup_cpu = -1;
 	int next_cpu = -1;
+	int cpu = smp_processor_id();
 	struct cpumask *rtg_target = find_rtg_target(p);
 	struct find_best_target_env fbt_env;
 	u64 start_t = 0;
@@ -7590,13 +7606,13 @@ static int select_energy_cpu_brute(struct task_struct *p, int prev_cpu, int sync
 	fbt_env.need_idle = wake_to_idle(p);
 	fbt_env.placement_boost = task_boost_policy(p);
 	fbt_env.avoid_prev_cpu = false;
+	fbt_env.skip_cpu = is_many_wakeup(sibling_count_hint) ?
+				cpu : -1;
 
 	if (prefer_idle || fbt_env.need_idle)
 		sync = 0;
 
 	if (sysctl_sched_sync_hint_enable && sync) {
-		int cpu = smp_processor_id();
-
 		if (bias_to_waker_cpu(p, cpu, rtg_target)) {
 			schedstat_inc(p->se.statistics.nr_wakeups_secb_sync);
 			schedstat_inc(this_rq()->eas_stats.secb_sync);
@@ -7735,7 +7751,7 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
 
 	if (energy_aware()) {
 		rcu_read_lock();
-		new_cpu = select_energy_cpu_brute(p, prev_cpu, sync);
+		new_cpu = select_energy_cpu_brute(p, prev_cpu, sync, sibling_count_hint);
 		rcu_read_unlock();
 		return new_cpu;
 	}
@@ -12186,7 +12202,7 @@ void check_for_migration(struct rq *rq, struct task_struct *p)
 
 		raw_spin_lock(&migration_lock);
 		rcu_read_lock();
-		new_cpu = select_energy_cpu_brute(p, cpu, 0);
+		new_cpu = select_energy_cpu_brute(p, cpu, 0, 1);
 		rcu_read_unlock();
 		if (capacity_orig_of(new_cpu) > capacity_orig_of(cpu)) {
 			active_balance = kick_active_balance(rq, p, new_cpu);

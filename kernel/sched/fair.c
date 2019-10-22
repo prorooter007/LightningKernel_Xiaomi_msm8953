@@ -7053,6 +7053,7 @@ static int start_cpu(struct task_struct *p, bool boosted,
 }
 
 unsigned int sched_smp_overlap_capacity;
+
 static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 				   bool boosted, bool prefer_idle,
 				   struct find_best_target_env *fbt_env)
@@ -7485,7 +7486,7 @@ static inline int wake_to_idle(struct task_struct *p)
 }
 
 static inline bool
-bias_to_waker_cpu(struct task_struct *p, int cpu, struct cpumask *rtg_target)
+bias_to_this_cpu(struct task_struct *p, int cpu, struct cpumask *rtg_target)
 {
 	int rtg_target_cpu = rtg_target ? cpumask_first(rtg_target) : cpu;
 
@@ -7573,6 +7574,7 @@ enum fastpaths {
 	NONE = 0,
 	SYNC_WAKEUP,
 	PREV_CPU_BIAS,
+	MANY_WAKEUP,
 };
 
 static int select_energy_cpu_brute(struct task_struct *p, int prev_cpu, int sync, int sibling_count_hint)
@@ -7613,13 +7615,20 @@ static int select_energy_cpu_brute(struct task_struct *p, int prev_cpu, int sync
 		sync = 0;
 
 	if (sysctl_sched_sync_hint_enable && sync) {
-		if (bias_to_waker_cpu(p, cpu, rtg_target)) {
+		if (bias_to_this_cpu(p, cpu, rtg_target)) {
 			schedstat_inc(p->se.statistics.nr_wakeups_secb_sync);
 			schedstat_inc(this_rq()->eas_stats.secb_sync);
 			target_cpu = cpu;
 			fastpath = SYNC_WAKEUP;
 			goto out;
 		}
+	}
+
+	if (is_many_wakeup(sibling_count_hint) && prev_cpu != cpu &&
+				bias_to_this_cpu(p, prev_cpu, rtg_target)) {
+		target_cpu = prev_cpu;
+		fastpath = MANY_WAKEUP;
+		goto out;
 	}
 
 	if (bias_to_prev_cpu(p, rtg_target)) {

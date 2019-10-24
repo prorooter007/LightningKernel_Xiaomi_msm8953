@@ -135,7 +135,7 @@ static void set_rgb_brightness(int r,int g,int b)
 static void fetch_full_rgb(void)
 {
 #if KLAPSE_MDSS
-    kcal_rgb_store(&K_RED, &K_GREEN, &K_BLUE);
+        kcal_rgb_get(&K_RED, &K_GREEN, &K_BLUE);
 #endif
 	current_r = K_RED * 100 / dimmer;
 	current_g = K_GREEN * 100 / dimmer;

@@ -315,20 +315,30 @@ static void mdss_mdp_kcal_update_igc(struct kcal_lut_data *lut_data)
 }
 
 void kcal_rgb_store(int r, int g, int b){
-        lut_data->red = r;
-        lut_data->green = g;
-        lut_data->blue = b;
+	if (lut_data != NULL){
+	        lut_data->red = r;
+        	lut_data->green = g;
+        	lut_data->blue = b;
 
-        mdss_mdp_kcal_update_pcc(lut_data);
-        mdss_mdp_kcal_display_commit();
+	        mdss_mdp_kcal_update_pcc(lut_data);
+        	mdss_mdp_kcal_display_commit();
+	} else{
+		pr_warn("lut_data is null!! not changing rgb!!");
+	}
 }
-
 EXPORT_SYMBOL_GPL(kcal_rgb_store);
 
 void kcal_rgb_get(int *r, int *g, int *b){
-	*r = lut_data->red;
-        *g = lut_data->green;
-        *b = lut_data->blue;
+	if (lut_data != NULL){
+		*r = lut_data->red;
+        	*g = lut_data->green;
+        	*b = lut_data->blue;
+	} else{
+		*r = 256;
+		*g = 256;
+		*b = 256;
+		pr_warn("lut_data is null!! setting rgb values to 256!!");
+	}
 }
 EXPORT_SYMBOL_GPL(kcal_rgb_get)
 

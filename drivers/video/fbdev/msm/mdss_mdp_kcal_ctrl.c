@@ -321,7 +321,6 @@ void kcal_rgb_store(int r, int g, int b){
         	lut_data->blue = b;
 
 	        mdss_mdp_kcal_update_pcc(lut_data);
-        	mdss_mdp_kcal_display_commit();
 	} else{
 		pr_warn("lut_data is null!! not changing rgb!!");
 	}

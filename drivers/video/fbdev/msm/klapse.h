@@ -5,7 +5,8 @@
 extern void set_rgb_slider(u32 bl_lvl);
 
 // from mdss kcal
-extern void kcal_klapse_push(int r, int g, int b);
+extern void kcal_rgb_get(int *r, int *g, int *b);
+extern void kcal_rgb_store(int r, int g, int b);
 
 /* DEFAULT_ENABLE values :
  * 0 = off

@@ -339,7 +339,7 @@ void kcal_rgb_get(int *r, int *g, int *b){
 		pr_warn("lut_data is null!! setting rgb values to 256!!");
 	}
 }
-EXPORT_SYMBOL_GPL(kcal_rgb_get)
+EXPORT_SYMBOL_GPL(kcal_rgb_get);
 
 static ssize_t kcal_store(struct device *dev, struct device_attribute *attr,
 						const char *buf, size_t count)

@@ -28,6 +28,12 @@
 
 	/* PM8953 S2 - VDD_CX supply */
 	rpm-regulator-smpa2 {
+		qcom,gx-retention; //Enable regulator retention level for IDLE modes
+		qcom,soft-start-enable = <0x1>; //enable soft start to start without current peaks that can damage device
+		qcom,hpm-enable = <0x1>; //enable high power mode
+		qcom,boost-current-limit = <14>; //3200mA maximum
+		qcom,ocp-enable = <1>; //enables over current protection
+		qcom,init-quiet-mode = <2>; //Regulator EMI noise reduction
 		status = "okay";
 		pm8953_s2_level: regulator-s2-level {
 			compatible = "qcom,rpm-smd-regulator";
@@ -87,6 +93,7 @@
 		pm8953_s4: regulator-s4 {
 			regulator-min-microvolt = <1900000>;
 			regulator-max-microvolt = <2050000>;
+			qcom,init-quiet-mode = <2>; //Regulator EMI noise reduction
 			qcom,init-voltage = <1900000>;
 			status = "okay";
 		};
@@ -321,6 +328,7 @@
 		pm8953_s5: spm-regulator@2000 {
 			compatible = "qcom,spm-regulator";
 			reg = <0x2000 0x100>;
+			qcom,init-quiet-mode = <2>; //Regulator EMI noise reduction
 			regulator-name = "pm8953_s5";
 			regulator-min-microvolt = <400000>;
 			regulator-max-microvolt = <1140000>;

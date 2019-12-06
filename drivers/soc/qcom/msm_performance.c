@@ -57,9 +57,6 @@ static int set_cpu_min_freq(const char *buf, const struct kernel_param *kp)
 	cpumask_var_t limit_mask;
 	int ret;
 
-	if (touchboost == 0)
-		return 0;
-
 	while ((cp = strpbrk(cp + 1, " :")))
 		ntokens++;
 
@@ -68,7 +65,6 @@ static int set_cpu_min_freq(const char *buf, const struct kernel_param *kp)
 		return -EINVAL;
 
 	cp = buf;
-
 	cpumask_clear(limit_mask);
 	for (i = 0; i < ntokens; i += 2) {
 		if (sscanf(cp, "%u:%u", &cpu, &val) != 2)
@@ -144,9 +140,6 @@ static int set_cpu_max_freq(const char *buf, const struct kernel_param *kp)
 	cpumask_var_t limit_mask;
 	int ret;
 
-	if (touchboost == 0)
-		return 0;
-
 	while ((cp = strpbrk(cp + 1, " :")))
 		ntokens++;
 
@@ -155,7 +148,6 @@ static int set_cpu_max_freq(const char *buf, const struct kernel_param *kp)
 		return -EINVAL;
 
 	cp = buf;
-
 	cpumask_clear(limit_mask);
 	for (i = 0; i < ntokens; i += 2) {
 		if (sscanf(cp, "%u:%u", &cpu, &val) != 2)

@@ -3300,7 +3300,7 @@ static int usb_bam_probe(struct platform_device *pdev)
 	mutex_init(&info[bam_type].suspend_resume_mutex);
 
 	ctx->usb_bam_wq = alloc_workqueue("usb_bam_wq",
-		WQ_UNBOUND | WQ_MEM_RECLAIM, 1);
+		WQ_UNBOUND | WQ_POWER_EFFICIENT | WQ_HIGHPRI | WQ_MEM_RECLAIM, 1);
 	if (!ctx->usb_bam_wq) {
 		log_event_err("unable to create workqueue usb_bam_wq\n");
 		return -ENOMEM;

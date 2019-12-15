@@ -5562,7 +5562,7 @@ static int __init _qcrypto_init(void)
 	spin_lock_init(&pcp->lock);
 	mutex_init(&pcp->engine_lock);
 	pcp->resp_wq = alloc_workqueue("qcrypto_seq_response_wq",
-			WQ_MEM_RECLAIM | WQ_HIGHPRI | WQ_CPU_INTENSIVE, 1);
+			WQ_MEM_RECLAIM | WQ_HIGHPRI | WQ_CPU_INTENSIVE | WQ_POWER_EFFICIENT, 1);
 	if (!pcp->resp_wq) {
 		pr_err("Error allocating workqueue\n");
 		return -ENOMEM;

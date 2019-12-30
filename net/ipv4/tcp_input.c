@@ -75,6 +75,7 @@
 #include <linux/ipsec.h>
 #include <asm/unaligned.h>
 #include <linux/errqueue.h>
+#include <net/request_sock.h>
 
 int sysctl_tcp_timestamps __read_mostly = 1;
 int sysctl_tcp_window_scaling __read_mostly = 1;
@@ -6412,14 +6413,18 @@ int tcp_conn_request(struct request_sock_ops *rsk_ops,
 	struct dst_entry *dst = NULL;
 	struct request_sock *req;
 	bool want_cookie = false;
+	int max_syn_backlog;
 	struct flowi fl;
+
+	max_syn_backlog = min((u32)sysctl_max_syn_backlog,
+			      sk->sk_max_ack_backlog);
 
 	/* TW buckets are converted to open requests without
 	 * limitations, they conserve resources and peer is
 	 * evidently real one.
 	 */
 	if ((net->ipv4.sysctl_tcp_syncookies == 2 ||
-	     inet_csk_reqsk_queue_is_full(sk)) && !isn) {
+	     inet_csk_reqsk_queue_len(sk) >= max_syn_backlog) && !isn) {
 		want_cookie = tcp_syn_flood_action(sk, skb, rsk_ops->slab_name);
 		if (!want_cookie)
 			goto drop;
@@ -6479,11 +6484,10 @@ int tcp_conn_request(struct request_sock_ops *rsk_ops,
 			}
 		}
 		/* Kill the following clause, if you dislike this way. */
-		else if (!net->ipv4.sysctl_tcp_syncookies &&
-			 (sysctl_max_syn_backlog - inet_csk_reqsk_queue_len(sk) <
-			  (sysctl_max_syn_backlog >> 2)) &&
-			 !tcp_peer_is_proven(req, dst, false,
-					     tmp_opt.saw_tstamp)) {
+		if (!net->ipv4.sysctl_tcp_syncookies &&
+		    (max_syn_backlog - inet_csk_reqsk_queue_len(sk) <
+		     (max_syn_backlog >> 2)) &&
+		    !tcp_peer_is_proven(req, dst, true, tmp_opt.saw_tstamp)) {
 			/* Without syncookies last quarter of
 			 * backlog is filled with destinations,
 			 * proven to be alive.

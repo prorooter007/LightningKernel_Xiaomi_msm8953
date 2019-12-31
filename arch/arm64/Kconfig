@@ -191,7 +191,7 @@ config ILLEGAL_POINTER_VALUE
 	default 0xdead000000000000
 
 config STACKTRACE_SUPPORT
-	def_bool y
+	def_bool n
 
 config ILLEGAL_POINTER_VALUE
 	hex

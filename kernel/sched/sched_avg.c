@@ -85,8 +85,8 @@ void sched_get_nr_running_avg(struct sched_avg_stats *stats)
 						NR_THRESHOLD_PCT), 100);
 		stats[cpu].nr_max = per_cpu(nr_max, cpu);
 
-		trace_sched_get_nr_running_avg(cpu, stats[cpu].nr,
-				stats[cpu].nr_misfit, stats[cpu].nr_max);
+		//trace_sched_get_nr_running_avg(cpu, stats[cpu].nr,
+		//		stats[cpu].nr_misfit, stats[cpu].nr_max);
 
 		per_cpu(last_time, cpu) = curr_time;
 		per_cpu(nr_prod_sum, cpu) = 0;

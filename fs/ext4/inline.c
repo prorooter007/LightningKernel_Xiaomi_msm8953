@@ -503,7 +503,7 @@ int ext4_readpage_inline(struct inode *inode, struct page *page)
 		return -EAGAIN;
 	}
 
-	if (trace_android_fs_dataread_start_enabled()) {
+	/*if (trace_android_fs_dataread_start_enabled()) {
 		char *path, pathbuf[MAX_TRACE_PATHBUF_LEN];
 
 		path = android_fstrace_get_pathname(pathbuf,
@@ -512,7 +512,7 @@ int ext4_readpage_inline(struct inode *inode, struct page *page)
 		trace_android_fs_dataread_start(inode, page_offset(page),
 						PAGE_SIZE, current->pid,
 						path, current->comm);
-	}
+	}*/
 
 	/*
 	 * Current inline data can only exist in the 1st page,
@@ -525,7 +525,7 @@ int ext4_readpage_inline(struct inode *inode, struct page *page)
 		SetPageUptodate(page);
 	}
 
-	trace_android_fs_dataread_end(inode, page_offset(page), PAGE_SIZE);
+	//trace_android_fs_dataread_end(inode, page_offset(page), PAGE_SIZE);
 
 	up_read(&EXT4_I(inode)->xattr_sem);
 

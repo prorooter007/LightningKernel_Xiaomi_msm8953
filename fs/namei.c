@@ -797,7 +797,7 @@ static inline int d_revalidate(struct dentry *dentry, unsigned int flags)
 static void success_walk_trace(struct nameidata *nd)
 {
 	struct path *pt = &nd->path;
-	struct inode *i = nd->inode;
+	//struct inode *i = nd->inode;
 	char buf[INIT_PATH_SIZE], *try_buf;
 	int cur_path_size;
 	char *p;
@@ -860,7 +860,7 @@ static void success_walk_trace(struct nameidata *nd)
 	if (cur_path_size > PATH_MAX)
 		sprintf(try_buf, "error:d_path_name_too_long");
 
-	trace_inodepath(i, try_buf);
+	//trace_inodepath(i, try_buf);
 
 	if (try_buf != buf)
 		kfree(try_buf);

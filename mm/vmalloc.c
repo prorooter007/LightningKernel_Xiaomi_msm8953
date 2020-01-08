@@ -499,7 +499,7 @@ link_va(struct vmap_area *va, struct rb_root *root,
 static __always_inline void
 unlink_va(struct vmap_area *va, struct rb_root *root)
 {
-	if (RB_EMPTY_NODE(&va->rb_node))
+	if (WARN_ON(RB_EMPTY_NODE(&va->rb_node)))
 		return;
 
 	if (root == &free_vmap_area_root)
@@ -511,48 +511,6 @@ unlink_va(struct vmap_area *va, struct rb_root *root)
 	list_del(&va->list);
 	RB_CLEAR_NODE(&va->rb_node);
 }
-
-#if DEBUG_AUGMENT_PROPAGATE_CHECK
-static void
-augment_tree_propagate_check(struct rb_node *n)
-{
-	struct vmap_area *va;
-	struct rb_node *node;
-	unsigned long size;
-	bool found = false;
-
-	if (n == NULL)
-		return;
-
-	va = rb_entry(n, struct vmap_area, rb_node);
-	size = va->subtree_max_size;
-	node = n;
-
-	while (node) {
-		va = rb_entry(node, struct vmap_area, rb_node);
-
-		if (get_subtree_max_size(node->rb_left) == size) {
-			node = node->rb_left;
-		} else {
-			if (va_size(va) == size) {
-				found = true;
-				break;
-			}
-
-			node = node->rb_right;
-		}
-	}
-
-	if (!found) {
-		va = rb_entry(n, struct vmap_area, rb_node);
-		pr_emerg("tree is corrupted: %lu, %lu\n",
-			va_size(va), va->subtree_max_size);
-	}
-
-	augment_tree_propagate_check(n->rb_left);
-	augment_tree_propagate_check(n->rb_right);
-}
-#endif
 
 #if DEBUG_AUGMENT_PROPAGATE_CHECK
 static void
@@ -761,10 +719,6 @@ insert:
 		link_va(va, root, parent, link, head);
 		augment_tree_propagate_from(va);
 	}
-
-#if DEBUG_AUGMENT_PROPAGATE_CHECK
-	augment_tree_propagate_check(free_vmap_area_root.rb_node);
-#endif
 }
 
 static __always_inline bool
@@ -1192,11 +1146,7 @@ EXPORT_SYMBOL_GPL(unregister_vmap_purge_notifier);
 static void free_vmap_area(struct vmap_area *va)
 {
 	/*
-	 * In most cases VA is not attached to the tree, but there
-	 * are a few exceptions:
-	 *
-	 * - is linked only in case of pcpu, recovery part;
-	 * - if radix_tree_preload gets failed, see new_vmap_block().
+	 * Remove from the busy tree/list.
 	 */
 	spin_lock(&vmap_area_lock);
 	unlink_va(va, &vmap_area_root);
@@ -1300,7 +1250,14 @@ static bool __purge_vmap_area_lazy(unsigned long start, unsigned long end)
 	llist_for_each_entry_safe(va, n_va, valist, purge_list) {
 		unsigned long nr = (va->va_end - va->va_start) >> PAGE_SHIFT;
 
-		__free_vmap_area(va);
+		/*
+		 * Finally insert or merge lazily-freed area. It is
+		 * detached and there is no need to "unlink" it from
+		 * anything.
+		 */
+		merge_or_add_vmap_area(va,
+			&free_vmap_area_root, &free_vmap_area_list);
+
 		atomic_long_sub(nr, &vmap_lazy_nr);
 
 		if (atomic_long_read(&vmap_lazy_nr) < resched_threshold)
@@ -3448,34 +3405,15 @@ static void *s_start(struct seq_file *m, loff_t *pos)
 	__acquires(&vmap_purge_lock)
 	__acquires(&vmap_area_lock)
 {
-	loff_t n = *pos;
-	struct vmap_area *va;
-
 	mutex_lock(&vmap_purge_lock);
 	spin_lock(&vmap_area_lock);
 
-	va = list_first_entry(&vmap_area_list, typeof(*va), list);
-	while (n > 0 && &va->list != &vmap_area_list) {
-		n--;
-		va = list_next_entry(va, list);
-	}
-	if (!n && &va->list != &vmap_area_list)
-		return va;
-
-	return NULL;
-
+	return seq_list_start(&vmap_area_list, *pos);
 }
 
 static void *s_next(struct seq_file *m, void *p, loff_t *pos)
 {
-	struct vmap_area *va = p, *next;
-
-	++*pos;
-	next = list_next_entry(va, list);
-	if (&next->list != &vmap_area_list)
-		return next;
-
-	return NULL;
+	return seq_list_next(p, &vmap_area_list, pos);
 }
 
 static void s_stop(struct seq_file *m, void *p)
@@ -3528,8 +3466,10 @@ static void show_purge_info(struct seq_file *m)
 
 static int s_show(struct seq_file *m, void *p)
 {
-	struct vmap_area *va = p;
+	struct vmap_area *va;
 	struct vm_struct *v;
+
+	va = list_entry(p, struct vmap_area, list);
 
 	/*
 	 * s_show can encounter race with remove_vm_area, !vm on behalf

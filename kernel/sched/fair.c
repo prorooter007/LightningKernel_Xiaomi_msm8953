@@ -6431,11 +6431,8 @@ static inline int select_energy_cpu_idx(struct energy_env *eenv)
 			eenv->cpu[cpu_idx].nrg_delta = 0;
 		/* update the schedule candidate with min(nrg_delta) */
 		if (eenv->cpu[cpu_idx].nrg_delta <
-		    eenv->cpu[eenv->next_idx].nrg_delta) {
+		    eenv->cpu[eenv->next_idx].nrg_delta)
 			eenv->next_idx = cpu_idx;
-			if (sched_feat(FBT_STRICT_ORDER))
-				break;
-		}
 	}
 
 	return eenv->next_idx;
@@ -7912,13 +7909,7 @@ static int select_energy_cpu_brute(struct task_struct *p, int prev_cpu)
 #endif
 
 	fbt_env.rtg_target = rtg_target;
-	if (sched_feat(EAS_USE_NEED_IDLE) && prefer_idle) {
-		fbt_env.need_idle = true;
-		prefer_idle = false;
-	} else {
-		fbt_env.need_idle = wake_to_idle(p);
-	}
-
+	fbt_env.need_idle = wake_to_idle(p);
 	fbt_env.placement_boost = task_boost_policy(p);
 
 	if (bias_to_prev_cpu(p, rtg_target)) {

@@ -1227,9 +1227,9 @@ static void __run_hrtimer(struct hrtimer_cpu_base *cpu_base,
 	 * the timer base.
 	 */
 	raw_spin_unlock(&cpu_base->lock);
-	trace_hrtimer_expire_entry(timer, now);
+	//trace_hrtimer_expire_entry(timer, now);
 	restart = fn(timer);
-	trace_hrtimer_expire_exit(timer);
+	//trace_hrtimer_expire_exit(timer);
 	raw_spin_lock(&cpu_base->lock);
 
 	/*

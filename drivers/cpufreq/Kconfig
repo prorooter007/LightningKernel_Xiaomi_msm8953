@@ -437,6 +437,8 @@ config SCHEDUTIL_DOWN_RATE_LIMIT
 	  This sets schedutil's default frequency down rate-limit in
 	  microseconds.
 
+endif
+
 config CPU_INPUT_BOOST
 	bool "CPU Input Boost"
 	help

@@ -38,11 +38,12 @@ static void __fscrypt_decrypt_bio(struct bio *bio, bool done)
 		} else {
 			int ret = fscrypt_decrypt_pagecache_blocks(page, bv->bv_len,
 							           bv->bv_offset);
-			if (ret)
+			if (ret) {
 				WARN_ON_ONCE(1);
 				SetPageError(page);
-			else if (done)
+			} else if (done) {
 				SetPageUptodate(page);
+	                }
 		}
 		if (done)
 			unlock_page(page);

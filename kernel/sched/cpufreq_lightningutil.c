@@ -22,17 +22,17 @@
 
 #define RATE_LIMIT				0
 
-#define BIT_SHIFT_1 				5
-#define BIT_SHIFT_1_2 				5
-#define BIT_SHIFT_2 				3
-#define TARGET_LOAD_1				40
-#define TARGET_LOAD_2				88
+#define BIT_SHIFT_1 				3
+#define BIT_SHIFT_1_2 				3
+#define BIT_SHIFT_2 				2
+#define TARGET_LOAD_1				34
+#define TARGET_LOAD_2				84
 
-#define BIT_SHIFT_1_BIGC 			5
-#define BIT_SHIFT_1_2_BIGC 			5
-#define BIT_SHIFT_2_BIGC 			3
-#define TARGET_LOAD_1_BIGC 			40
-#define TARGET_LOAD_2_BIGC 			88
+#define BIT_SHIFT_1_BIGC 			3
+#define BIT_SHIFT_1_2_BIGC 			3
+#define BIT_SHIFT_2_BIGC 			2
+#define TARGET_LOAD_1_BIGC 			34
+#define TARGET_LOAD_2_BIGC 			84
 
 #define DEFAULT_SUSPEND_MAX_FREQ_SILVER 1401600
 #define DEFAULT_SUSPEND_MAX_FREQ_GOLD 1401600
@@ -409,7 +409,7 @@ static void smugov_calc_avg_cap(struct smugov_policy *sg_policy, u64 curr_ws,
 }
 
 #define NL_RATIO 75
-#define DEFAULT_HISPEED_LOAD 80
+#define DEFAULT_HISPEED_LOAD 94
 static void smugov_walt_adjust(struct smugov_cpu *sg_cpu, unsigned long *util,
 			      unsigned long *max)
 {
@@ -1252,10 +1252,10 @@ static int smugov_init(struct cpufreq_policy *policy)
 	}
 
 	tunables->pl = 1;
-	tunables->up_rate_limit_us = 1000;
-	tunables->down_rate_limit_us = 2000;
+	tunables->up_rate_limit_us = 3000;
+	tunables->down_rate_limit_us = 1500;
 	tunables->hispeed_load = DEFAULT_HISPEED_LOAD;
-	tunables->hispeed_freq = 1401600;
+	tunables->hispeed_freq = 1689600;
 	lat = policy->cpuinfo.transition_latency / NSEC_PER_USEC;
 	if (lat) {
 		tunables->up_rate_limit_us *= lat;

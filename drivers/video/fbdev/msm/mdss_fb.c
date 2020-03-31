@@ -3121,8 +3121,8 @@ static int __mdss_fb_wait_for_fence_sub(struct msm_sync_pt_data *sync_pt_data,
 		if (ret == -ETIMEDOUT) {
 			wait_jf = timeout - jiffies;
 			wait_ms = jiffies_to_msecs(wait_jf);
-			if (wait_jf < 0)
-				break;
+			if (wait_jf < 0) {
+				break; }
 
 			wait_ms = min_t(long, WAIT_FENCE_FINAL_TIMEOUT,
 					wait_ms);

@@ -1163,10 +1163,10 @@ static void mdss_dsi_phy_regulator_ctrl(struct mdss_dsi_ctrl_pdata *ctrl,
 			 * regulator if the other dsi controller is still
 			 * active.
 			 */
-			if (!mdss_dsi_is_hw_config_dual(sdata) ||
+		if (!mdss_dsi_is_hw_config_dual(sdata) ||
 				(other_ctrl && (!other_ctrl->is_phyreg_enabled
-						|| other_ctrl->mmss_clamp)))
-				mdss_dsi_28nm_phy_regulator_enable(ctrl);
+						|| other_ctrl->mmss_clamp))) {
+				mdss_dsi_28nm_phy_regulator_enable(ctrl); }
 				break;
 			}
 		}

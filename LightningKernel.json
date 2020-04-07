@@ -1,0 +1,13 @@
+{
+  "kernel": {
+    "name": "Lightning Kernel",
+    "version": "v6.0",
+    "link": "https://github.com/prorooter007/LightningKernel_Xiaomi_msm8953/releases/download/6.0/Lightning_Kernel_Treble_NonTreble-V6.0.zip",
+    "changelog_url": "https://github.com/prorooter007/LightningKernel_Xiaomi_msm8953/releases/tag/6.0",
+    "date": "2020-04-07",
+    "sha1": "eab1eb87505b7bb40730d1eb9bab0c5990517472"
+  },
+  "support": {
+    "link": "https://t.me/lightningkernel"
+  }
+}

@@ -94,9 +94,11 @@ static int get_minutes_before_stop(void)
 
 static void set_rgb(int r, int g, int b)
 {
-    kcal_rgb_get(&klapse_red, &klapse_green, &klapse_blue);
+    klapse_red = r;
+    klapse_green = g;
+    klapse_blue = b;
 
-    kcal_rgb_store(r, g, b);
+    kcal_klapse_push(r, g, b);
 
     current_r = r;
     current_g = g;

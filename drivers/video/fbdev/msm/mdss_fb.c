@@ -49,9 +49,7 @@
 #ifdef CONFIG_MACH_XIAOMI_TISSOT
 #include <linux/mdss_io_util.h>
 #endif
-#ifdef CONFIG_KLAPSE
-#include <linux/klapse.h>
-#endif
+#include "klapse.h"
 #include "mdss_fb.h"
 #include "mdss_mdp_splash_logo.h"
 #define CREATE_TRACE_POINTS

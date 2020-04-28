@@ -43,11 +43,6 @@ static unsigned short current_b = MAX_SCALE;
 static unsigned short flow_r = MAX_SCALE;
 static unsigned short flow_g = MAX_SCALE;
 static unsigned short flow_b = MAX_SCALE;
-#if KLAPSE_MDSS
-static unsigned short K_RED = MAX_SCALE;
-static unsigned short K_GREEN = MAX_SCALE;
-static unsigned short K_BLUE = MAX_SCALE;
-#endif
 static unsigned int active_minutes;
 static unsigned int last_bl = MAX_BRIGHTNESS;
 static unsigned long local_time;
@@ -111,7 +106,7 @@ static int get_minutes_before_stop(void)
 static void set_rgb(int r, int g, int b)
 {
 #if KLAPSE_MDSS
-	kcal_rgb_store(r,g,b);
+	klapse_kcal_push(r,g,b);
 #else
 	K_RED = r;
 	K_GREEN = g;
@@ -612,3 +607,6 @@ module_exit(klapse_exit);
 MODULE_VERSION("5.0");
 MODULE_AUTHOR("tanish2k09");
 MODULE_LICENSE("GPLv2");
+
+
+

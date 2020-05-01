@@ -463,6 +463,7 @@ static int variable_rate_pll_clk_enable(struct clk *c)
 			 */
 			if ((readl_relaxed(PLL_STATUS_REG(pll)) & lockmask))
 				break;
+			else
 				early_lock = true;
 		}
 		udelay(1);

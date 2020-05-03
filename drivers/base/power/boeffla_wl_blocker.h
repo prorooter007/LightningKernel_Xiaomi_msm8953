@@ -16,7 +16,7 @@
 
 #define BOEFFLA_WL_BLOCKER_VERSION	"1.1.0"
 
-#define LIST_WL_DEFAULT				 "NETLINK;[timerfd];IPA_WS"
+#define LIST_WL_DEFAULT				 "NETLINK;[timerfd];IPA_WS;hal_bluetooth_lock"
 
 #define LENGTH_LIST_WL			255
 #define LENGTH_LIST_WL_DEFAULT		100

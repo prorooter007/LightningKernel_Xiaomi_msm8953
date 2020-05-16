@@ -6,6 +6,7 @@ git clone --depth=1 -b master https://github.com/kdrag0n/proton-clang clang
 git clone https://github.com/prorooter007/AnyKernel3 -b tissot --depth=1 AnyKernel
 echo "Done"
 KERNEL_DIR=$(pwd)
+REPACK_DIR="${KERNEL_DIR}/AnyKernel"
 IMAGE="${KERNEL_DIR}/out/arch/arm64/boot/Image.gz"
 DTB_T="${KERNEL_DIR}/out/arch/arm64/boot/dts/qcom/msm8953-qrd-sku3-tissot-treble.dtb"
 DTB="${KERNEL_DIR}/out/arch/arm64/boot/dts/qcom/msm8953-qrd-sku3-tissot-nontreble.dtb"
@@ -25,27 +26,32 @@ function compile() {
                       CROSS_COMPILE=aarch64-linux-gnu- \
                       CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
 
+    cd $REPACK_DIR
+    mkdir kernel
+    mkdir treble
+    mkdir non-treble
+
     if ! [ -a "$IMAGE" ]; then
         exit 1
         echo "There are some issues"
     fi
-    cp $IMAGE $AnyKernel/kernel/
+    cp $IMAGE $REPACK_DIR/kernel/
 
     if ! [ -a "$DTB" ]; then
         exit 1
         echo "There are some issues"
     fi
-    cp $DTB $AnyKernel/non-treble/
+    cp $DTB $REPACK_DIR/non-treble/
 
     if ! [ -a "$DTB_T" ]; then
         exit 1
         echo "There are some issues"
     fi
-    cp $DTB_T $AnyKernel/treble/
+    cp $DTB_T $REPACK_DIR/treble/
 }
 # Zipping
 function zipping() {
-    cd AnyKernel || exit 1
+    cd $REPACK_DIR || exit 1
     zip -r9 Lightning_Kernel-${TANGGAL}.zip *
     curl https://bashupload.com/Lightning_Kernel-${TANGGAL}.zip --data-binary @Lightning_Kernel-${TANGGAL}.zip
 }

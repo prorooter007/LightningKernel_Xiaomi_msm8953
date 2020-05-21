@@ -1836,7 +1836,6 @@ TRACE_EVENT(sched_get_nr_running_avg,
 		__field(        int,    evt			)
 		__field(unsigned int,	demand			)
 		__field(unsigned int,	sum			)
-		__field(	 int,	cpu			)
 		__field(	u64,	cs			)
 		__field(	u64,	ps			)
 		__field(	u64,	util			)

@@ -27,7 +27,7 @@
 	interrupt-parent = <&wakegic>;
 
 	chosen {
-		bootargs = "core_ctl_disable_cpumask=0-7 kpti=0";
+		bootargs = "boot_cpus=0,1,2,3,4,5,6,7 core_ctl_disable_cpumask=0-7 kpti=0";
 	};
 
 	vendor: vendor {

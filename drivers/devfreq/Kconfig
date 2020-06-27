@@ -89,15 +89,6 @@ config QCOM_BIMC_BWMON
 	  has the capability to raise an IRQ when the count exceeds a
 	  programmable limit.
 
-config ARM_MEMLAT_MON
-	tristate "ARM CPU Memory Latency monitor hardware"
-	depends on ARCH_QCOM
-	help
-	  The PMU present on these ARM cores allow for the use of counters to
-	  monitor the memory latency characteristics of an ARM CPU workload.
-	  This driver uses these counters to implement the APIs needed by
-	  the mem_latency devfreq governor.
-
 config QCOMCCI_HWMON
 	tristate "QTI CCI Cache monitor hardware"
 	depends on ARCH_QCOM
@@ -173,45 +164,6 @@ config DEVFREQ_GOV_QCOM_GPUBW_MON
 	  and select bus frequency votes using an "on-demand" alorithm.
 	  This governor is unlikely to be useful for non-Adreno
 	  devices.
-
-config ARM_EXYNOS_BUS_DEVFREQ
-	tristate "ARM EXYNOS Generic Memory Bus DEVFREQ Driver"
-	depends on ARCH_EXYNOS || COMPILE_TEST
-	select DEVFREQ_GOV_SIMPLE_ONDEMAND
-	select DEVFREQ_GOV_PASSIVE
-	select DEVFREQ_EVENT_EXYNOS_PPMU
-	select PM_DEVFREQ_EVENT
-	select PM_OPP
-	help
-	  This adds the common DEVFREQ driver for Exynos Memory bus. Exynos
-	  Memory bus has one more group of memory bus (e.g, MIF and INT block).
-	  Each memory bus group could contain many memoby bus block. It reads
-	  PPMU counters of memory controllers by using DEVFREQ-event device
-	  and adjusts the operating frequencies and voltages with OPP support.
-	  This does not yet operate with optimal voltages.
-
-config ARM_TEGRA_DEVFREQ
-	tristate "Tegra DEVFREQ Driver"
-	depends on ARCH_TEGRA_124_SOC
-	select DEVFREQ_GOV_SIMPLE_ONDEMAND
-	select PM_OPP
-	help
-	  This adds the DEVFREQ driver for the Tegra family of SoCs.
-	  It reads ACTMON counters of memory controllers and adjusts the
-	  operating frequencies and voltages with OPP support.
-
-config ARM_RK3399_DMC_DEVFREQ
-	tristate "ARM RK3399 DMC DEVFREQ Driver"
-	depends on (ARCH_ROCKCHIP && HAVE_ARM_SMCCC) || \
-		(COMPILE_TEST && HAVE_ARM_SMCCC)
-	select DEVFREQ_EVENT_ROCKCHIP_DFI
-	select DEVFREQ_GOV_SIMPLE_ONDEMAND
-	select PM_DEVFREQ_EVENT
-	select PM_OPP
-	help
-          This adds the DEVFREQ driver for the RK3399 DMC(Dynamic Memory Controller).
-          It sets the frequency for the memory controller and reads the usage counts
-          from hardware.
 
 config DEVFREQ_SIMPLE_DEV
 	tristate "Device driver for simple clock device with no status info"

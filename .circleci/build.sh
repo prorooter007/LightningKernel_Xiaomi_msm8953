@@ -28,8 +28,8 @@ function compile() {
 
     cd $REPACK_DIR
     mkdir kernel
-    mkdir treble
-    mkdir non-treble
+    mkdir dtb-treble
+    mkdir dtb-nontreble
 
     if ! [ -a "$IMAGE" ]; then
         exit 1
@@ -41,13 +41,13 @@ function compile() {
         exit 1
         echo "There are some issues"
     fi
-    cp $DTB $REPACK_DIR/non-treble/
+    cp $DTB $REPACK_DIR/dtb-nontreble/
 
     if ! [ -a "$DTB_T" ]; then
         exit 1
         echo "There are some issues"
     fi
-    cp $DTB_T $REPACK_DIR/treble/
+    cp $DTB_T $REPACK_DIR/dtb-treble/
 }
 # Zipping
 function zipping() {

@@ -862,7 +862,7 @@ struct rq {
 	unsigned long calc_load_update;
 	long calc_load_active;
 
-#ifdef CONFIG_SCHED_HRTICK
+#ifdef CONFIG_HIGH_RES_TIMERS
 #ifdef CONFIG_SMP
 	int hrtick_csd_pending;
 	struct call_single_data hrtick_csd;
@@ -1824,7 +1824,7 @@ static inline u64 sched_avg_period(void)
 	return (u64)sysctl_sched_time_avg * NSEC_PER_MSEC / 2;
 }
 
-#ifdef CONFIG_SCHED_HRTICK
+#ifdef CONFIG_HIGH_RES_TIMERS
 
 /*
  * Use hrtick when:
@@ -1849,7 +1849,7 @@ static inline int hrtick_enabled(struct rq *rq)
 	return 0;
 }
 
-#endif /* CONFIG_SCHED_HRTICK */
+#endif /* CONFIG_HIGH_RES_TIMERS */
 
 #ifdef CONFIG_SMP
 extern void sched_avg_update(struct rq *rq);

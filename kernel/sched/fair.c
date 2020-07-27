@@ -4040,7 +4040,7 @@ entity_tick(struct cfs_rq *cfs_rq, struct sched_entity *curr, int queued)
 	update_load_avg(curr, UPDATE_TG);
 	update_cfs_shares(curr);
 
-#ifdef CONFIG_SCHED_HRTICK
+#ifdef CONFIG_HIGH_RES_TIMERS
 	/*
 	 * queued ticks are scheduled to match the slice, so don't bother
 	 * validating it and just reschedule.
@@ -4906,7 +4906,7 @@ static inline void unthrottle_offline_cfs_rqs(struct rq *rq) {}
  * CFS operations on tasks:
  */
 
-#ifdef CONFIG_SCHED_HRTICK
+#ifdef CONFIG_HIGH_RES_TIMERS
 static void hrtick_start_fair(struct rq *rq, struct task_struct *p)
 {
 	struct sched_entity *se = &p->se;
@@ -4943,7 +4943,7 @@ static void hrtick_update(struct rq *rq)
 	if (cfs_rq_of(&curr->se)->nr_running < sched_nr_latency)
 		hrtick_start_fair(rq, curr);
 }
-#else /* !CONFIG_SCHED_HRTICK */
+#else /* !CONFIG_HIGH_RES_TIMERS */
 static inline void
 hrtick_start_fair(struct rq *rq, struct task_struct *p)
 {

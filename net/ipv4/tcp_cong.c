@@ -201,7 +201,6 @@ static void tcp_reinit_congestion_control(struct sock *sk,
 
 	if (!((1 << sk->sk_state) & (TCPF_CLOSE | TCPF_LISTEN)))
 		tcp_init_congestion_control(sk);
-	}
 }
 
 /* Manage refcounts on socket close. */

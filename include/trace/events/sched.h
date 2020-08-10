@@ -1418,7 +1418,7 @@ TRACE_EVENT(sched_contrib_scale_f,
 extern unsigned int sysctl_sched_use_walt_cpu_util;
 extern unsigned int sysctl_sched_use_walt_task_util;
 extern unsigned int sched_ravg_window;
-extern unsigned int walt_disabled;
+extern bool walt_disabled;
 #endif
 
 /*
@@ -1789,19 +1789,19 @@ TRACE_EVENT(sched_get_nr_running_avg,
 
 	TP_STRUCT__entry(
 		__field( int,	avg			)
-		__field( int,	big_avg		)
+		__field( int,	big_avg			)
 		__field( int,	iowait_avg		)
 		__field( unsigned int,	max_nr		)
 		__field( unsigned int,	big_max_nr	)
 		__array(	char,	comm,   TASK_COMM_LEN	)
 		__field(	pid_t,	pid			)
-		__field(	pid_t,	cur_pid		)
+		__field(	pid_t,	cur_pid			)
 		__field(	u64,	wallclock		)
 		__field(	u64,	mark_start		)
-		__field(	u64,	delta_m		)
+		__field(	u64,	delta_m			)
 		__field(	u64,	win_start		)
 		__field(	u64,	delta			)
-		__field(	u64,	irqtime		)
+		__field(	u64,	irqtime			)
 		__field(        int,    evt			)
 		__field(unsigned int,	demand			)
 		__field(unsigned int,	sum			)
@@ -1825,10 +1825,10 @@ TRACE_EVENT(sched_get_nr_running_avg,
 	),
 
 	TP_printk("avg=%d big_avg=%d iowait_avg=%d max_nr=%u big_max_nr=%u"
-	        " wc %llu ws %llu delta %llu event %d cpu %d cur_pid %d task %d (%s) ms %llu delta %llu demand %u sum %u irqtime %llu"
+		" wc %llu ws %llu delta %llu event %d cpu %d cur_pid %d task %d (%s) ms %llu delta %llu demand %u sum %u irqtime %llu"
 		" cs %llu ps %llu util %llu cur_window %u prev_window %u active_wins %u",
 		__entry->avg, __entry->big_avg, __entry->iowait_avg,
-		__entry->max_nr, __entry->big_max_nr),
+		__entry->max_nr, __entry->big_max_nr,
 		__entry->wallclock, __entry->win_start, __entry->delta,
 		__entry->evt, __entry->cpu, __entry->cur_pid,
 		__entry->pid, __entry->comm, __entry->mark_start,

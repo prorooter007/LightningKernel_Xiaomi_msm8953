@@ -1242,7 +1242,6 @@ static int max98927_probe(struct snd_soc_codec *codec)
 	pr_info("------%s------\n", __func__);
 
 	max98927->codec = codec;
-	codec->control_data = max98927->regmap_l;
 
 	if (max98927->left_i2c) {
 		if (max98927->mono_stereo) {

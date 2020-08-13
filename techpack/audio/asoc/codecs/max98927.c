@@ -1243,7 +1243,6 @@ static int max98927_probe(struct snd_soc_codec *codec)
 
 	max98927->codec = codec;
 	codec->control_data = max98927->regmap_l;
-	codec->cache_bypass = 1;
 
 	if (max98927->left_i2c) {
 		if (max98927->mono_stereo) {

@@ -19,7 +19,7 @@ export KBUILD_BUILD_USER=prorooter007
 export KBUILD_BUILD_HOST=circleci
 # Compile plox
 function compile() {
-    make -j$(nproc) O=out ARCH=arm64 tissot_defconfig
+    make -j$(nproc) O=out ARCH=arm64 lightning-tissot_defconfig
     make -j$(nproc) O=out \
                     ARCH=arm64 \
                       CC=clang \

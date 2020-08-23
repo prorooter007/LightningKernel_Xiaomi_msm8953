@@ -30,7 +30,7 @@ function compile() {
         exit 1
         echo "There are some issues"
     fi
-    cp $IMAGE $REPACK_DIR/kernel/
+    cp $IMAGE $REPACK_DIR/
 }
 # Zipping
 function zipping() {

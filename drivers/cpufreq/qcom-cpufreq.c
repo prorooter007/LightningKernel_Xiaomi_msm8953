@@ -343,7 +343,7 @@ static void msm_cpufreq_ready(struct cpufreq_policy *policy)
 				return;
 
 			cpumask_set_cpu(cpu, &cpu_mask);
-			cdev[cpu] = of_cpufreq_cooling_register(np, &cpu_mask);
+			cdev[cpu] = of_cpufreq_cooling_register(policy);
 			if (IS_ERR(cdev[cpu])) {
 				pr_err(
 				"running cpufreq for CPU%d without cooling dev: %ld\n",

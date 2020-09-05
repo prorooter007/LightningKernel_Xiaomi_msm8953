@@ -8343,7 +8343,7 @@ int sched_cpu_deactivate(unsigned int cpu)
 	 *
 	 * Do sync before park smpboot threads to take care the rcu boost case.
 	 */
-	synchronize_rcu_mult(call_rcu, call_rcu_sched);
+	synchronize_sched();
 
 #ifdef CONFIG_SCHED_SMT
 	/*

@@ -102,6 +102,23 @@ static unsigned int cs_dbs_update(struct cpufreq_policy *policy)
 		policy_dbs->idle_periods = UINT_MAX;
 	}
 
+	freq_step = get_freq_step(cs_tuners, policy);
+
+	/*
+	 * Decrease requested_freq one freq_step for each idle period that
+	 * we didn't update the frequency.
+	 */
+	if (policy_dbs->idle_periods < UINT_MAX) {
+		unsigned int freq_steps = policy_dbs->idle_periods * freq_step;
+
+		if (requested_freq > freq_steps)
+			requested_freq -= freq_steps;
+		else
+			requested_freq = policy->min;
+
+		policy_dbs->idle_periods = UINT_MAX;
+	}
+
 	/* Check for frequency increase */
 	if (load > dbs_data->up_threshold) {
 		dbs_info->down_skip = 0;

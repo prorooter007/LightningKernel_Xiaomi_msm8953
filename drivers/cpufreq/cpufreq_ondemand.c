@@ -170,7 +170,7 @@ static void od_update(struct cpufreq_policy *policy)
 	}
 }
 
-static unsigned int od_dbs_timer(struct cpufreq_policy *policy)
+static unsigned int od_dbs_update(struct cpufreq_policy *policy)
 {
 	struct policy_dbs_info *policy_dbs = policy->governor_data;
 	struct dbs_data *dbs_data = policy_dbs->dbs_data;
@@ -192,7 +192,7 @@ static unsigned int od_dbs_timer(struct cpufreq_policy *policy)
 	od_update(policy);
 
 	if (dbs_info->freq_lo) {
-		/* Setup timer for SUB_SAMPLE */
+		/* Setup SUB_SAMPLE */
 		dbs_info->sample_type = OD_SUB_SAMPLE;
 		return dbs_info->freq_hi_delay_us;
 	}
@@ -256,11 +256,11 @@ static ssize_t store_sampling_down_factor(struct gov_attr_set *attr_set,
 	list_for_each_entry(policy_dbs, &attr_set->policy_list, list) {
 		/*
 		 * Doing this without locking might lead to using different
-		 * rate_mult values in od_update() and od_dbs_timer().
+		 * rate_mult values in od_update() and od_dbs_update().
 		 */
-		mutex_lock(&policy_dbs->timer_mutex);
+		mutex_lock(&policy_dbs->update_mutex);
 		policy_dbs->rate_mult = 1;
-		mutex_unlock(&policy_dbs->timer_mutex);
+		mutex_unlock(&policy_dbs->update_mutex);
 	}
 
 	return count;
@@ -403,7 +403,7 @@ static struct od_ops od_ops = {
 static struct dbs_governor od_dbs_gov = {
 	.gov = CPUFREQ_DBS_GOVERNOR_INITIALIZER("ondemand"),
 	.kobj_type = { .default_attrs = od_attributes },
-	.gov_dbs_timer = od_dbs_timer,
+	.gov_dbs_update = od_dbs_update,
 	.alloc = od_alloc,
 	.free = od_free,
 	.init = od_init,

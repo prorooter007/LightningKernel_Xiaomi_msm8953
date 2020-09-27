@@ -88,9 +88,13 @@ static int msm_v4l2_close(struct file *filp)
 
 	rc = msm_vidc_close(vidc_inst);
 	
-	pm_qos_update_request(&msm_v4l2_vidc_pm_qos_request,
-			PM_QOS_DEFAULT_VALUE);
-	pm_qos_remove_request(&msm_v4l2_vidc_pm_qos_request);
+	if (pm_qos_request_active(&msm_v4l2_vidc_pm_qos_request)) {
+		pm_qos_update_request(&msm_v4l2_vidc_pm_qos_request,
+				PM_QOS_DEFAULT_VALUE);
+
+		pm_qos_remove_request(&msm_v4l2_vidc_pm_qos_request);
+	}
+
 
 
 	trace_msm_v4l2_vidc_close_end("msm_v4l2_close end");

@@ -19,5 +19,5 @@
 #define LIST_WL_DEFAULT				"qcom_rx_wakelock;wlan;wlan_wow_wl;wlan_extscan_wl;netmgr_wl;NETLINK;IPA_WS;[timerfd];wlan_ipa;wlan_pno_wl;wcnss_filter_lock;IPCRTR_lpass_rx;hal_bluetooth_lock"
 
 #define LENGTH_LIST_WL			255
-#define LENGTH_LIST_WL_DEFAULT		158
+#define LENGTH_LIST_WL_DEFAULT		159
 #define LENGTH_LIST_WL_SEARCH		LENGTH_LIST_WL + LENGTH_LIST_WL_DEFAULT + 5

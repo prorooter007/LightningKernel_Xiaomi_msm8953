@@ -262,7 +262,8 @@ static enum eSirMacStatusCodes lim_check_sae_pmf_cap(tpPESession session,
 }
 #else
 static enum eSirMacStatusCodes lim_check_sae_pmf_cap(tpPESession session,
-                                                    tDot11fIERSN *rsn)
+                                                    tDot11fIERSN *rsn,
+						                            enum ani_akm_type akm_type)
 {
     return eSIR_MAC_SUCCESS_STATUS;
 }

@@ -159,6 +159,7 @@ static inline bool wq_has_sleeper(wait_queue_head_t *wq)
 }
 
 extern void add_wait_queue(wait_queue_head_t *q, wait_queue_t *wait);
+extern void add_wait_queue_exclusive_lifo(wait_queue_head_t *wq_head, wait_queue_t *wq_entry);
 extern void add_wait_queue_exclusive(wait_queue_head_t *q, wait_queue_t *wait);
 extern void remove_wait_queue(wait_queue_head_t *q, wait_queue_t *wait);
 
@@ -979,6 +980,7 @@ do {									\
  */
 void prepare_to_wait(wait_queue_head_t *q, wait_queue_t *wait, int state);
 void prepare_to_wait_exclusive(wait_queue_head_t *q, wait_queue_t *wait, int state);
+void prepare_to_wait_exclusive_lifo(wait_queue_head_t *wq_head, wait_queue_t *wq_entry, int state);
 long prepare_to_wait_event(wait_queue_head_t *q, wait_queue_t *wait, int state);
 void finish_wait(wait_queue_head_t *q, wait_queue_t *wait);
 long wait_woken(wait_queue_t *wait, unsigned mode, long timeout);

@@ -42,6 +42,17 @@ void add_wait_queue_exclusive(wait_queue_head_t *q, wait_queue_t *wait)
 }
 EXPORT_SYMBOL(add_wait_queue_exclusive);
 
+void add_wait_queue_exclusive_lifo(wait_queue_head_t *wq_head, wait_queue_t *wq_entry)
+{
+	unsigned long flags;
+
+	wq_entry->flags |= WQ_FLAG_EXCLUSIVE;
+	spin_lock_irqsave(&wq_head->lock, flags);
+	__add_wait_queue(wq_head, wq_entry);
+	spin_unlock_irqrestore(&wq_head->lock, flags);
+}
+EXPORT_SYMBOL(add_wait_queue_exclusive_lifo);
+
 void remove_wait_queue(wait_queue_head_t *q, wait_queue_t *wait)
 {
 	unsigned long flags;
@@ -195,6 +206,19 @@ prepare_to_wait_exclusive(wait_queue_head_t *q, wait_queue_t *wait, int state)
 	spin_unlock_irqrestore(&q->lock, flags);
 }
 EXPORT_SYMBOL(prepare_to_wait_exclusive);
+
+void prepare_to_wait_exclusive_lifo(wait_queue_head_t *wq_head, wait_queue_t *wq_entry, int state)
+{
+	unsigned long flags;
+
+	wq_entry->flags |= WQ_FLAG_EXCLUSIVE;
+	spin_lock_irqsave(&wq_head->lock, flags);
+	if (list_empty(&wq_entry->task_list))
+		__add_wait_queue(wq_head, wq_entry);
+	set_current_state(state);
+	spin_unlock_irqrestore(&wq_head->lock, flags);
+}
+EXPORT_SYMBOL(prepare_to_wait_exclusive_lifo);
 
 void init_wait_entry(wait_queue_t *wait, int flags)
 {

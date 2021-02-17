@@ -364,8 +364,7 @@ out:
 }
 
 static int devfreq_cpufreq_get_freq(struct devfreq *df,
-					unsigned long *freq,
-					u32 *flag)
+					unsigned long *freq)
 {
 	unsigned int cpu, tgt_freq = 0;
 	struct devfreq_node *node;

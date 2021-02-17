@@ -28,8 +28,7 @@ static struct devfreq *df;
  * by KGSL driver to get and return a value for frequency.
  */
 static int devfreq_vbif_get_freq(struct devfreq *df,
-				unsigned long *freq,
-				u32 *flag)
+				unsigned long *freq)
 {
 	/* If the IB isn't set yet, check if it should be non-zero. */
 	if (!dev_ib && extern_get_bw) {

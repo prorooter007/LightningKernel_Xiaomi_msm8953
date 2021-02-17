@@ -259,8 +259,7 @@ static void gov_stop(struct devfreq *df)
 }
 
 static int devfreq_memlat_get_freq(struct devfreq *df,
-					unsigned long *freq,
-					u32 *flag)
+					unsigned long *freq)
 {
 	int i, lat_dev = 0;
 	struct memlat_node *node = df->data;

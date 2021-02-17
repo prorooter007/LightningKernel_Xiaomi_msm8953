@@ -894,7 +894,7 @@ static unsigned long __calculate(struct vidc_bus_vote_data *d,
 }
 
 
-static int __get_target_freq(struct devfreq *dev, unsigned long *freq, u32 *flag)
+static int __get_target_freq(struct devfreq *dev, unsigned long *freq)
 {
 	unsigned long ab_kbps = 0, c = 0;
 	struct devfreq_dev_status stats = {0};

@@ -830,6 +830,7 @@ void do_exit(long code)
 		panic("Recursive fault!\n");
 #else
 		pr_alert("Fixing recursive fault but reboot is needed!\n");
+#endif
 		futex_exit_recursive(tsk);
 		set_current_state(TASK_UNINTERRUPTIBLE);
 		schedule();

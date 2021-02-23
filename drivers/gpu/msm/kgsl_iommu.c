@@ -1875,10 +1875,9 @@ static int kgsl_iommu_sparse_dummy_map(struct kgsl_pagetable *pt,
 	struct page **pages = NULL;
 	struct sg_table sgt;
 	int count = size >> PAGE_SHIFT;
-	unsigned int map_flags;
 
 	/* verify the offset is within our range */
-	if (size + offset > kgsl_memdesc_footprint(memdesc))
+	if (size + offset > memdesc->size)
 		return -EINVAL;
 
 	if (kgsl_dummy_page == NULL) {
@@ -1887,10 +1886,6 @@ static int kgsl_iommu_sparse_dummy_map(struct kgsl_pagetable *pt,
 		if (kgsl_dummy_page == NULL)
 			return -ENOMEM;
 	}
-
-	map_flags = MMU_FEATURE(pt->mmu, KGSL_MMU_PAD_VA) ?
-				_get_protection_flags(memdesc) :
-				IOMMU_READ | IOMMU_NOEXEC;
 
 	pages = kcalloc(count, sizeof(struct page *), GFP_KERNEL);
 	if (pages == NULL)
@@ -1903,7 +1898,7 @@ static int kgsl_iommu_sparse_dummy_map(struct kgsl_pagetable *pt,
 			0, size, GFP_KERNEL);
 	if (ret == 0) {
 		ret = _iommu_map_sg_sync_pc(pt, memdesc->gpuaddr + offset,
-				sgt.sgl, sgt.nents, map_flags);
+				sgt.sgl, sgt.nents, IOMMU_READ | IOMMU_NOEXEC);
 		sg_free_table(&sgt);
 	}
 

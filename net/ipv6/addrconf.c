@@ -240,8 +240,8 @@ static struct ipv6_devconf ipv6_devconf __read_mostly = {
 	.use_oif_addrs_only	= 0,
 	.ignore_routes_with_linkdown = 0,
 	.keep_addr_on_down	= 0,
-	.accept_ra_prefix_route = 1,
 	.addr_gen_mode		= IN6_ADDR_GEN_MODE_EUI64,
+	.accept_ra_prefix_route = 1,
 };
 
 static struct ipv6_devconf ipv6_devconf_dflt __read_mostly = {
@@ -290,8 +290,8 @@ static struct ipv6_devconf ipv6_devconf_dflt __read_mostly = {
 	.use_oif_addrs_only	= 0,
 	.ignore_routes_with_linkdown = 0,
 	.keep_addr_on_down	= 0,
-	.accept_ra_prefix_route = 1,
 	.addr_gen_mode		= IN6_ADDR_GEN_MODE_EUI64,
+	.accept_ra_prefix_route = 1,
 };
 
 /* Check if link is ready: is it up and is a valid qdisc available */

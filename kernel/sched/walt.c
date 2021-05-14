@@ -2570,6 +2570,9 @@ static void transfer_busy_time(struct rq *rq, struct related_thread_group *grp,
  * The children inherits the group id from the parent.
  */
 
+/* Maximum allowed threshold before freq aggregation must be enabled */
+#define MAX_FREQ_AGGR_THRESH 1000
+
 struct related_thread_group *related_thread_groups[MAX_NUM_CGROUP_COLOC_ID];
 static LIST_HEAD(active_related_thread_groups);
 DEFINE_RWLOCK(related_thread_group_lock);

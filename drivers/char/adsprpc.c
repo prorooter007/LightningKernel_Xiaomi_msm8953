@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2020, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2021, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -519,7 +519,7 @@ bail:
 static void fastrpc_buf_free(struct fastrpc_buf *buf, int cache)
 {
 	struct fastrpc_file *fl = buf == NULL ? NULL : buf->fl;
-	int vmid;
+	int vmid, err = 0;
 
 	if (!fl)
 		return;
@@ -540,6 +540,9 @@ static void fastrpc_buf_free(struct fastrpc_buf *buf, int cache)
 		int destVM[1] = {VMID_HLOS};
 		int destVMperm[1] = {PERM_READ | PERM_WRITE | PERM_EXEC};
 
+		VERIFY(err, fl->sctx != NULL);
+		if (err)
+			goto bail;
 		if (fl->sctx->smmu.cb)
 			buf->phys &= ~((uint64_t)fl->sctx->smmu.cb << 32);
 		vmid = fl->apps->channel[fl->cid].vmid;
@@ -552,6 +555,7 @@ static void fastrpc_buf_free(struct fastrpc_buf *buf, int cache)
 		dma_free_attrs(fl->sctx->smmu.dev, buf->size, buf->virt,
 					buf->phys, buf->dma_attr);
 	}
+bail:
 	kfree(buf);
 }
 
@@ -736,6 +740,12 @@ static void fastrpc_mmap_free(struct fastrpc_mmap *map, uint32_t flags)
 	if (!map)
 		return;
 	fl = map->fl;
+	/* remote heap and dynamic loading memory
+	 * maps expected to initialize with NULL
+	 */
+	if (!fl && !(map->flags == ADSP_MMAP_HEAP_ADDR ||
+				map->flags == ADSP_MMAP_REMOTE_HEAP_ADDR))
+		return;
 	if (fl && !(map->flags == ADSP_MMAP_HEAP_ADDR ||
 				map->flags == ADSP_MMAP_REMOTE_HEAP_ADDR)) {
 		cid = fl->cid;
@@ -1047,6 +1057,11 @@ static int fastrpc_buf_alloc(struct fastrpc_file *fl, size_t size,
 	buf->flags = rflags;
 	buf->raddr = 0;
 	buf->remote = 0;
+	VERIFY(err, fl && fl->sctx != NULL);
+	if (err) {
+		err = -EBADR;
+		goto bail;
+	}
 	buf->virt = dma_alloc_attrs(fl->sctx->smmu.dev, buf->size,
 				       (dma_addr_t *)&buf->phys,
 					   GFP_KERNEL, buf->dma_attr);
@@ -1211,6 +1226,7 @@ static int context_alloc(struct fastrpc_file *fl, uint32_t kernel,
 	struct smq_invoke_ctx *ctx = NULL;
 	struct fastrpc_ctx_lst *clst = &fl->clst;
 	struct fastrpc_ioctl_invoke *invoke = &invokefd->inv;
+	unsigned long irq_flags = 0;
 
 	bufs = REMOTE_SCALARS_LENGTH(invoke->sc);
 	size = bufs * sizeof(*ctx->lpra) + bufs * sizeof(*ctx->maps) +
@@ -1272,7 +1288,7 @@ static int context_alloc(struct fastrpc_file *fl, uint32_t kernel,
 	hlist_add_head(&ctx->hn, &clst->pending);
 	spin_unlock(&fl->hlock);
 
-	spin_lock(&me->ctxlock);
+	spin_lock_irqsave(&me->ctxlock, irq_flags);
 	for (ii = 0; ii < FASTRPC_CTX_MAX; ii++) {
 		if (!me->ctxtable[ii]) {
 			me->ctxtable[ii] = ctx;
@@ -1280,7 +1296,7 @@ static int context_alloc(struct fastrpc_file *fl, uint32_t kernel,
 			break;
 		}
 	}
-	spin_unlock(&me->ctxlock);
+	spin_unlock_irqrestore(&me->ctxlock, irq_flags);
 	VERIFY(err, ii < FASTRPC_CTX_MAX);
 	if (err) {
 		pr_err("adsprpc: out of context memory\n");
@@ -1310,6 +1326,9 @@ static void context_free(struct smq_invoke_ctx *ctx)
 	struct fastrpc_apps *me = &gfa;
 	int nbufs = REMOTE_SCALARS_INBUFS(ctx->sc) +
 		    REMOTE_SCALARS_OUTBUFS(ctx->sc);
+	unsigned long irq_flags = 0;
+	void *handle = NULL;
+	const void *ptr = NULL;
 	spin_lock(&ctx->fl->hlock);
 	hlist_del_init(&ctx->hn);
 	spin_unlock(&ctx->fl->hlock);
@@ -1323,14 +1342,20 @@ static void context_free(struct smq_invoke_ctx *ctx)
 	ctx->magic = 0;
 	ctx->ctxid = 0;
 
-	spin_lock(&me->ctxlock);
+	spin_lock_irqsave(&me->ctxlock, irq_flags);
 	for (i = 0; i < FASTRPC_CTX_MAX; i++) {
 		if (me->ctxtable[i] == ctx) {
+			handle = me->ctxtable[i]->handle;
+			ptr = me->ctxtable[i]->ptr;
 			me->ctxtable[i] = NULL;
 			break;
 		}
 	}
-	spin_unlock(&me->ctxlock);
+	spin_unlock_irqrestore(&me->ctxlock, irq_flags);
+	if (handle) {
+		glink_rx_done(handle, ptr, true);
+		handle = NULL;
+	}
 
 	kfree(ctx);
 }
@@ -1698,7 +1723,7 @@ static int get_args(uint32_t kernel, struct smq_invoke_ctx *ctx)
 
 		if (map && map->uncached)
 			continue;
-		if (ctx->fl->sctx->smmu.coherent &&
+		if (ctx->fl->sctx && ctx->fl->sctx->smmu.coherent &&
 			!(map && (map->attr & FASTRPC_ATTR_NON_COHERENT)))
 			continue;
 		if (map && (map->attr & FASTRPC_ATTR_COHERENT))
@@ -1806,7 +1831,7 @@ static void inv_args_pre(struct smq_invoke_ctx *ctx)
 			continue;
 		if (!rpra[i].buf.len)
 			continue;
-		if (ctx->fl->sctx->smmu.coherent &&
+		if (ctx->fl && ctx->fl->sctx && ctx->fl->sctx->smmu.coherent &&
 			!(map && (map->attr & FASTRPC_ATTR_NON_COHERENT)))
 			continue;
 		if (map && (map->attr & FASTRPC_ATTR_COHERENT))
@@ -1860,7 +1885,7 @@ static void inv_args(struct smq_invoke_ctx *ctx)
 			continue;
 		if (!rpra[i].buf.len)
 			continue;
-		if (ctx->fl->sctx->smmu.coherent &&
+		if (ctx->fl && ctx->fl->sctx && ctx->fl->sctx->smmu.coherent &&
 			!(map && (map->attr & FASTRPC_ATTR_NON_COHERENT)))
 			continue;
 		if (map && (map->attr & FASTRPC_ATTR_COHERENT))
@@ -2118,10 +2143,6 @@ static int fastrpc_internal_invoke(struct fastrpc_file *fl, uint32_t mode,
 	if (err)
 		goto bail;
  bail:
-	if (ctx && ctx->handle) {
-		glink_rx_done(ctx->handle, ctx->ptr, true);
-		ctx->handle = NULL;
-	}
 	if (ctx && interrupted == -ERESTARTSYS)
 		context_save_interrupted(ctx);
 	else if (ctx)
@@ -2416,6 +2437,9 @@ static int fastrpc_release_current_dsp_process(struct fastrpc_file *fl)
 	int tgid = 0;
 
 	VERIFY(err, fl->cid >= 0 && fl->cid < NUM_CHANNELS);
+	if (err)
+		goto bail;
+	VERIFY(err, fl->sctx != NULL);
 	if (err)
 		goto bail;
 	VERIFY(err, fl->apps->channel[fl->cid].chan != NULL);
@@ -2757,8 +2781,13 @@ static int fastrpc_internal_munmap(struct fastrpc_file *fl,
 	mutex_unlock(&fl->fl_map_mutex);
 	if (err)
 		goto bail;
+	VERIFY(err, map != NULL);
+	if (err) {
+		err = -EINVAL;
+		goto bail;
+	}
 	VERIFY(err, !fastrpc_munmap_on_dsp(fl, map->raddr,
-				map->phys, map->size, map->flags));
+			map->phys, map->size, map->flags));
 	if (err)
 		goto bail;
 	mutex_lock(&fl->fl_map_mutex);
@@ -2946,6 +2975,7 @@ static void fastrpc_glink_notify_rx(void *handle, const void *priv,
 	struct fastrpc_apps *me = &gfa;
 	uint32_t index;
 	int err = 0;
+	unsigned long irq_flags = 0;
 
 	VERIFY(err, (rsp && size >= sizeof(*rsp)));
 	if (err)
@@ -2960,13 +2990,16 @@ static void fastrpc_glink_notify_rx(void *handle, const void *priv,
 	if (err)
 		goto bail;
 
+	spin_lock_irqsave(&me->ctxlock, irq_flags);
 	VERIFY(err, ((me->ctxtable[index]->ctxid == (rsp->ctx & ~3)) &&
 		me->ctxtable[index]->magic == FASTRPC_CTX_MAGIC));
-	if (err)
+	if (err) {
+		spin_unlock_irqrestore(&me->ctxlock, irq_flags);
 		goto bail;
-
+	}
 	me->ctxtable[index]->handle = handle;
 	me->ctxtable[index]->ptr = ptr;
+	spin_unlock_irqrestore(&me->ctxlock, irq_flags);
 
 	context_notify_user(me->ctxtable[index], rsp->retval);
 bail:
@@ -3597,22 +3630,26 @@ static int fastrpc_set_process_info(struct fastrpc_file *fl)
 {
 	int err = 0, buf_size = 0;
 	char strpid[PID_SIZE];
+	char cur_comm[TASK_COMM_LEN];
 
+	memcpy(cur_comm, current->comm, TASK_COMM_LEN);
+	cur_comm[TASK_COMM_LEN-1] = '\0';
 	fl->tgid = current->tgid;
 	snprintf(strpid, PID_SIZE, "%d", current->pid);
-	buf_size = strlen(current->comm) + strlen("_") + strlen(strpid) + 1;
+	buf_size = strlen(cur_comm) + strlen("_") + strlen(strpid) + 1;
 	fl->debug_buf = kzalloc(buf_size, GFP_KERNEL);
 	if (!fl->debug_buf) {
 		err = -ENOMEM;
 		return err;
 	}
-	snprintf(fl->debug_buf, UL_SIZE, "%.10s%s%d",
-			current->comm, "_", current->pid);
+	snprintf(fl->debug_buf, buf_size, "%.10s%s%d",
+			cur_comm, "_", current->pid);
 	fl->debugfs_file = debugfs_create_file(fl->debug_buf, 0644,
 					debugfs_root, fl, &debugfs_fops);
 	if (!fl->debugfs_file)
 		pr_warn("Error: %s: %s: failed to create debugfs file %s\n",
-				current->comm, __func__, fl->debug_buf);
+				cur_comm, __func__, fl->debug_buf);
+
 	return err;
 }
 
@@ -3658,8 +3695,10 @@ static int fastrpc_get_info(struct fastrpc_file *fl, uint32_t *info)
 			goto bail;
 	}
 	VERIFY(err, fl->sctx != NULL);
-	if (err)
+	if (err) {
+		err = -EBADR;
 		goto bail;
+	}
 	*info = (fl->sctx->smmu.enabled ? 1 : 0);
 bail:
 	return err;
@@ -3731,6 +3770,11 @@ static long fastrpc_device_ioctl(struct file *file, unsigned int ioctl_num,
 	int size = 0, err = 0;
 	uint32_t info;
 
+	VERIFY(err, fl != NULL);
+	if (err) {
+		err = -EBADR;
+		goto bail;
+	}
 	p.inv.fds = NULL;
 	p.inv.attrs = NULL;
 	p.inv.crc = NULL;

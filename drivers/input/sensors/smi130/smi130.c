@@ -18496,7 +18496,8 @@ u8 v_command_reg_data_u8)
 	SMI130_RETURN_FUNCTION_TYPE com_rslt = E_SMI130_COMM_RES;
 
 	if (p_smi130->mag_manual_enable != SMI130_MANUAL_ENABLE) {
-		com_rslt = smi130_set_mag_manual_enable(SMI130_MANUAL_ENABLE);
+		com_rslt = smi130_set_mag_manual_enable(
+		SMI130_MANUAL_ENABLE);
 		p_smi130->delay_msec(SMI130_GEN_READ_WRITE_DELAY);
 	}
 

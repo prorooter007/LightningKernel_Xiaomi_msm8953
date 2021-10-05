@@ -22,6 +22,11 @@
 				vendor {
 					status = "disable";
 				};
+				system {
+					fsmgr_flags = "wait,slotselect";
+					status = "disable";
+				};
+
 			};
 		};
 	};

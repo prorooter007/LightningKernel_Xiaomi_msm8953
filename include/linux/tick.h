@@ -131,7 +131,9 @@ static inline void tick_nohz_idle_exit(void) { }
 
 static inline ktime_t tick_nohz_get_sleep_length(void)
 {
-	return NSEC_PER_SEC / HZ;
+	ktime_t len = { .tv64 = NSEC_PER_SEC/HZ };
+
+	return len;
 }
 static inline u64 get_cpu_idle_time_us(int cpu, u64 *unused) { return -1; }
 static inline u64 get_cpu_iowait_time_us(int cpu, u64 *unused) { return -1; }

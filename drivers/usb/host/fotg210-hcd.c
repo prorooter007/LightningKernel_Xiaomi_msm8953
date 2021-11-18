@@ -1380,7 +1380,7 @@ static enum hrtimer_restart fotg210_hrtimer_func(struct hrtimer *t)
 	 */
 	now = ktime_get();
 	for_each_set_bit(e, &events, FOTG210_HRTIMER_NUM_EVENTS) {
-		if (now >= fotg210->hr_timeouts[e])
+		if (now.tv64 >= fotg210->hr_timeouts[e].tv64)
 			event_handlers[e](fotg210);
 		else
 			fotg210_enable_event(fotg210, e, false);

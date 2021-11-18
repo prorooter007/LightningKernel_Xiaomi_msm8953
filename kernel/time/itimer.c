@@ -34,10 +34,10 @@ static struct timeval itimer_get_remtime(struct hrtimer *timer)
 	 * then we return 0 - which is correct.
 	 */
 	if (hrtimer_active(timer)) {
-		if (rem <= 0)
-			rem = NSEC_PER_USEC;
+		if (rem.tv64 <= 0)
+			rem.tv64 = NSEC_PER_USEC;
 	} else
-		rem = 0;
+		rem.tv64 = 0;
 
 	return ktime_to_timeval(rem);
 }
@@ -216,12 +216,12 @@ again:
 			goto again;
 		}
 		expires = timeval_to_ktime(value->it_value);
-		if (expires != 0) {
+		if (expires.tv64 != 0) {
 			tsk->signal->it_real_incr =
 				timeval_to_ktime(value->it_interval);
 			hrtimer_start(timer, expires, HRTIMER_MODE_REL);
 		} else
-			tsk->signal->it_real_incr = 0;
+			tsk->signal->it_real_incr.tv64 = 0;
 
 		trace_itimer_state(ITIMER_REAL, value, 0);
 		spin_unlock_irq(&tsk->sighand->siglock);

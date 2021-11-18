@@ -171,7 +171,7 @@ hrtimer_check_target(struct hrtimer *timer, struct hrtimer_clock_base *new_base)
 		return 0;
 
 	expires = ktime_sub(hrtimer_get_expires(timer), new_base->offset);
-	return expires <= new_base->cpu_base->expires_next;
+	return expires.tv64 <= new_base->cpu_base->expires_next.tv64;
 #else
 	return 0;
 #endif
@@ -313,7 +313,7 @@ ktime_t ktime_add_safe(const ktime_t lhs, const ktime_t rhs)
 	 * We use KTIME_SEC_MAX here, the maximum timeout which we can
 	 * return to user space in a timespec:
 	 */
-	if (res < 0 || res < lhs || res < rhs)
+	if (res.tv64 < 0 || res.tv64 < lhs.tv64 || res.tv64 < rhs.tv64)
 		res = ktime_set(KTIME_SEC_MAX, 0);
 
 	return res;
@@ -465,8 +465,8 @@ static inline void hrtimer_update_next_timer(struct hrtimer_cpu_base *cpu_base,
 static ktime_t __hrtimer_get_next_event(struct hrtimer_cpu_base *cpu_base)
 {
 	struct hrtimer_clock_base *base = cpu_base->clock_base;
+	ktime_t expires, expires_next = { .tv64 = KTIME_MAX };
 	unsigned int active = cpu_base->active_bases;
-	ktime_t expires, expires_next = KTIME_MAX;
 
 	hrtimer_update_next_timer(cpu_base, NULL);
 	for (; active; base++, active >>= 1) {
@@ -479,7 +479,7 @@ static ktime_t __hrtimer_get_next_event(struct hrtimer_cpu_base *cpu_base)
 		next = timerqueue_getnext(&base->active);
 		timer = container_of(next, struct hrtimer, node);
 		expires = ktime_sub(hrtimer_get_expires(timer), base->offset);
-		if (expires < expires_next) {
+		if (expires.tv64 < expires_next.tv64) {
 			expires_next = expires;
 			hrtimer_update_next_timer(cpu_base, timer);
 		}
@@ -489,8 +489,8 @@ static ktime_t __hrtimer_get_next_event(struct hrtimer_cpu_base *cpu_base)
 	 * the clock bases so the result might be negative. Fix it up
 	 * to prevent a false positive in clockevents_program_event().
 	 */
-	if (expires_next < 0)
-		expires_next = 0;
+	if (expires_next.tv64 < 0)
+		expires_next.tv64 = 0;
 	return expires_next;
 }
 #endif
@@ -561,10 +561,10 @@ hrtimer_force_reprogram(struct hrtimer_cpu_base *cpu_base, int skip_equal)
 
 	expires_next = __hrtimer_get_next_event(cpu_base);
 
-	if (skip_equal && expires_next == cpu_base->expires_next)
+	if (skip_equal && expires_next.tv64 == cpu_base->expires_next.tv64)
 		return;
 
-	cpu_base->expires_next = expires_next;
+	cpu_base->expires_next.tv64 = expires_next.tv64;
 
 	/*
 	 * If a hang was detected in the last timer interrupt then we
@@ -622,10 +622,10 @@ static void hrtimer_reprogram(struct hrtimer *timer,
 	 * CLOCK_REALTIME timer might be requested with an absolute
 	 * expiry time which is less than base->offset. Set it to 0.
 	 */
-	if (expires < 0)
-		expires = 0;
+	if (expires.tv64 < 0)
+		expires.tv64 = 0;
 
-	if (expires >= cpu_base->expires_next)
+	if (expires.tv64 >= cpu_base->expires_next.tv64)
 		return;
 
 	/* Update the pointer to the next expiring timer */
@@ -653,7 +653,7 @@ static void hrtimer_reprogram(struct hrtimer *timer,
  */
 static inline void hrtimer_init_hres(struct hrtimer_cpu_base *base)
 {
-	base->expires_next = KTIME_MAX;
+	base->expires_next.tv64 = KTIME_MAX;
 	base->hang_detected = 0;
 	base->hres_active = 0;
 	base->next_timer = NULL;
@@ -801,21 +801,21 @@ u64 hrtimer_forward(struct hrtimer *timer, ktime_t now, ktime_t interval)
 
 	delta = ktime_sub(now, hrtimer_get_expires(timer));
 
-	if (delta < 0)
+	if (delta.tv64 < 0)
 		return 0;
 
 	if (WARN_ON(timer->state & HRTIMER_STATE_ENQUEUED))
 		return 0;
 
-	if (interval < hrtimer_resolution)
-		interval = hrtimer_resolution;
+	if (interval.tv64 < hrtimer_resolution)
+		interval.tv64 = hrtimer_resolution;
 
-	if (unlikely(delta >= interval)) {
+	if (unlikely(delta.tv64 >= interval.tv64)) {
 		s64 incr = ktime_to_ns(interval);
 
 		orun = ktime_divns(delta, incr);
 		hrtimer_add_expires_ns(timer, incr * orun);
-		if (hrtimer_get_expires_tv64(timer) > now)
+		if (hrtimer_get_expires_tv64(timer) > now.tv64)
 			return orun;
 		/*
 		 * This (and the ktime_add() below) is the
@@ -1093,7 +1093,7 @@ u64 hrtimer_get_next_event(void)
 	raw_spin_lock_irqsave(&cpu_base->lock, flags);
 
 	if (!__hrtimer_hres_active(cpu_base))
-		expires = __hrtimer_get_next_event(cpu_base);
+		expires = __hrtimer_get_next_event(cpu_base).tv64;
 
 	raw_spin_unlock_irqrestore(&cpu_base->lock, flags);
 
@@ -1295,7 +1295,7 @@ static void __hrtimer_run_queues(struct hrtimer_cpu_base *cpu_base, ktime_t now)
 			 * are right-of a not yet expired timer, because that
 			 * timer will have to trigger a wakeup anyway.
 			 */
-			if (basenow < hrtimer_get_softexpires_tv64(timer))
+			if (basenow.tv64 < hrtimer_get_softexpires_tv64(timer))
 				break;
 
 			__run_hrtimer(cpu_base, base, timer, &basenow);
@@ -1317,7 +1317,7 @@ void hrtimer_interrupt(struct clock_event_device *dev)
 
 	BUG_ON(!cpu_base->hres_active);
 	cpu_base->nr_events++;
-	dev->next_event = KTIME_MAX;
+	dev->next_event.tv64 = KTIME_MAX;
 
 	raw_spin_lock(&cpu_base->lock);
 	entry_time = now = hrtimer_update_base(cpu_base);
@@ -1330,7 +1330,7 @@ retry:
 	 * timers which run their callback and need to be requeued on
 	 * this CPU.
 	 */
-	cpu_base->expires_next = KTIME_MAX;
+	cpu_base->expires_next.tv64 = KTIME_MAX;
 
 	__hrtimer_run_queues(cpu_base, now);
 
@@ -1378,13 +1378,13 @@ retry:
 	cpu_base->hang_detected = 1;
 	raw_spin_unlock(&cpu_base->lock);
 	delta = ktime_sub(now, entry_time);
-	if ((unsigned int)delta > cpu_base->max_hang_time)
-		cpu_base->max_hang_time = (unsigned int) delta;
+	if ((unsigned int)delta.tv64 > cpu_base->max_hang_time)
+		cpu_base->max_hang_time = (unsigned int) delta.tv64;
 	/*
 	 * Limit it to a sensible value as we enforce a longer
 	 * delay. Give the CPU at least 100ms to catch up.
 	 */
-	if (delta > 100 * NSEC_PER_MSEC)
+	if (delta.tv64 > 100 * NSEC_PER_MSEC)
 		expires_next = ktime_add_ns(now, 100 * NSEC_PER_MSEC);
 	else
 		expires_next = ktime_add(now, delta);
@@ -1494,7 +1494,7 @@ static int update_rmtp(struct hrtimer *timer, struct timespec __user *rmtp)
 	ktime_t rem;
 
 	rem = hrtimer_expires_remaining(timer);
-	if (rem <= 0)
+	if (rem.tv64 <= 0)
 		return 0;
 	rmt = ktime_to_timespec(rem);
 
@@ -1725,7 +1725,7 @@ schedule_hrtimeout_range_clock(ktime_t *expires, u64 delta,
 	 * Optimize when a zero timeout value is given. It does not
 	 * matter whether this is an absolute or a relative time.
 	 */
-	if (expires && *expires == 0) {
+	if (expires && !expires->tv64) {
 		__set_current_state(TASK_RUNNING);
 		return 0;
 	}

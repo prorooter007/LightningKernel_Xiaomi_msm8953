@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /*
  * Copyright (c) 2011-2018, 2020 The Linux Foundation. All rights reserved.
  *

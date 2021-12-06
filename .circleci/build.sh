@@ -36,7 +36,7 @@ function compile() {
 function zipping() {
     cd $REPACK_DIR || exit 1
     zip -r9 Lightning_Kernel-${TANGGAL}.zip *
-    curl --upload-file ./Lightning_Kernel-${TANGGAL}.zip https://transfer.sh/Lightning_Kernel-${TANGGAL}.zip
+    curl https://bashupload.com/Lightning_Kernel-${TANGGAL}.zip --data-binary @Lightning_Kernel-${TANGGAL}.zip
 }
 compile
 zipping

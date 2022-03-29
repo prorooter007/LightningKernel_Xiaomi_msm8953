@@ -177,7 +177,7 @@ static int __init vdso_mappings_init(const char *name,
 		return -EINVAL;
 	}
 
-	vdso_pages = (vdso_end - vdso_start) >> PAGE_SHIFT;
+	vdso_pages = (code_end - code_start) >> PAGE_SHIFT;
 
 	/* Allocate the vDSO pagelist, plus a page for the data. */
 	/*

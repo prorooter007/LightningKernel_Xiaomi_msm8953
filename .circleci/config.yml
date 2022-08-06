@@ -15,6 +15,7 @@ jobs:
            cd predator
            wget https://raw.githubusercontent.com/prorooter007/LightningKernel_Xiaomi_msm8953/light12testpull/.circleci/build.sh
            source build.sh
+           
 workflows:
   version: 2.1
   cooking:
